@@ -55,7 +55,7 @@ client.on("interactionCreate", async interaction => {
   // /ping
   if (interaction.isChatInputCommand() && interaction.commandName === "ping") {
     const latency = Date.now() - interaction.createdTimestamp;
-    return interaction.reply(`${latency} ms!\nBot is Online!`);
+    return interaction.reply(`${latency} Backshots!\nBot is Online!`);
   }
 
   // /restart (owner only)
