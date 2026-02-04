@@ -8,7 +8,7 @@ const {
 } = require("discord.js");
 const fs = require("fs");
 
-const OWNER_ID = "YOUR_DISCORD_ID_HERE"; // PUT YOUR ID HERE
+const OWNER_ID = "1287545546231255092"; // PUT YOUR ID HERE
 
 const data = JSON.parse(fs.readFileSync("./pokemon.json"));
 
