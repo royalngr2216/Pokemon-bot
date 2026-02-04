@@ -12,7 +12,7 @@ client.once("ready", async () => {
 
   await client.application.commands.create({
     name: "gengar",
-    description: "Show beautiful Gengar competitive sets"
+    description: "Show Gengar competitive sets"
   });
 });
 
@@ -26,19 +26,26 @@ client.on("interactionCreate", async interaction => {
       .setTitle("👻 Gengar — Competitive Sets")
       .setColor(0x8e44ad)
       .setThumbnail(gengar.image)
+      .setDescription("━━━━━━━━━━━━━━━━━━━━")
       .setFooter({ text: "Your personal Pokédex bot" });
 
-    gengar.sets.forEach(set => {
+    gengar.sets.forEach((set, i) => {
       embed.addFields({
-        name: `✨ ${set.name}`,
+        name: `🟪 ${set.name}`,
         value:
-          `🧢 **Item:** ${set.item}\n` +
-          `🧬 **Ability:** ${set.ability}\n` +
-          `📊 **EVs:** ${set.evs}\n` +
-          `🌿 **Nature:** ${set.nature}\n` +
-          `⚔️ **Moves:**\n• ${set.moves.join("\n• ")}`,
+          `**Item:** ${set.item}\n` +
+          `**Ability:** ${set.ability}\n` +
+          `**EVs:** ${set.evs}\n` +
+          `**Nature:** ${set.nature}\n\n` +
+          `**Moves**\n` +
+          `• ${set.moves.join("\n• ")}`,
         inline: true
       });
+
+      // force new row every 2 sets
+      if ((i + 1) % 2 === 0) {
+        embed.addFields({ name: "‎", value: "‎", inline: false });
+      }
     });
 
     await interaction.reply({ embeds: [embed] });
