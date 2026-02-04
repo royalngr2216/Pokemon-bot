@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 const fs = require("fs");
 
 const data = JSON.parse(fs.readFileSync("./pokemon.json"));
@@ -12,7 +12,7 @@ client.once("ready", async () => {
 
   await client.application.commands.create({
     name: "gengar",
-    description: "Show Gengar movesets"
+    description: "Show beautiful Gengar movesets"
   });
 });
 
@@ -20,15 +20,27 @@ client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === "gengar") {
-    const sets = data.gengar;
+    const gengar = data.gengar;
 
-    let reply = "**Gengar Sets:**\n\n";
+    const embed = new EmbedBuilder()
+      .setTitle("👻 Gengar — Competitive Sets")
+      .setColor(0x8e44ad)
+      .setThumbnail(gengar.image)
+      .setFooter({ text: "Your personal Pokédex bot" });
 
-    sets.forEach(s => {
-      reply += `**${s.name}**\nItem: ${s.item}\nMoves: ${s.moves.join(", ")}\n\n`;
+    gengar.sets.forEach(set => {
+      embed.addFields({
+        name: `✨ ${set.name}`,
+        value:
+          `**Item:** ${set.item}\n` +
+          `**Ability:** ${set.ability}\n` +
+          `**EVs:** ${set.evs}\n` +
+          `**Nature:** ${set.nature}\n` +
+          `**Moves:** ${set.moves.join(", ")}`
+      });
     });
 
-    await interaction.reply(reply);
+    await interaction.reply({ embeds: [embed] });
   }
 });
 
