@@ -8,14 +8,23 @@ const {
 } = require("discord.js");
 const fs = require("fs");
 
-// YOUR DISCORD ID (owner)
+// OWNER
 const OWNER_ID = "1287545546231255092";
 
-const data = JSON.parse(fs.readFileSync("./pokemon.json"));
+// Pokemon list (keys only)
+const pokemonData = JSON.parse(fs.readFileSync("./pokemon.json"));
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
+
+function showdownGif(name) {
+  return `https://play.pokemonshowdown.com/sprites/xyani/${name}.gif`;
+}
+
+function pokeIcon(name) {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${name}.png`;
+}
 
 async function registerCommands() {
   await client.application.commands.set([
@@ -45,67 +54,32 @@ client.once("ready", async () => {
 
 client.on("interactionCreate", async interaction => {
 
-  // OWNER RESTART
+  // RESTART
   if (interaction.isChatInputCommand() && interaction.commandName === "restart") {
-    if (interaction.user.id !== OWNER_ID) {
+    if (interaction.user.id !== OWNER_ID)
       return interaction.reply({ content: "Not allowed.", ephemeral: true });
-    }
 
     await interaction.reply("Restarting...");
     await client.application.commands.set([]);
     setTimeout(() => process.exit(0), 1500);
   }
 
-  // /pokemon command
+  // /pokemon
   if (interaction.isChatInputCommand() && interaction.commandName === "pokemon") {
 
     const name = interaction.options.getString("name").toLowerCase();
-    const mon = data[name];
 
-    if (!mon) {
+    if (!pokemonData[name])
       return interaction.reply({ content: "Pokemon not found.", ephemeral: true });
-    }
 
     const embed = new EmbedBuilder()
-      .setTitle(`👻 ${name.toUpperCase()}`)
-      .setColor(0x2b2d31) // elegant dark (matches Discord theme)
-      .setThumbnail(mon.icon)
-      .setImage(mon.images[0])
-      .setFooter({ text: `Image 1 / ${mon.images.length}` });
+      .setTitle(name.toUpperCase())
+      .setColor(0x2b2d31)
+      .setThumbnail(pokeIcon(name))
+      .setImage(showdownGif(name))
+      .setFooter({ text: "Animated sprite via Pokémon Showdown" });
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`prev_${name}`)
-        .setEmoji("⬅️")
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`next_${name}`)
-        .setEmoji("➡️")
-        .setStyle(ButtonStyle.Secondary)
-    );
-
-    await interaction.reply({ embeds: [embed], components: [row] });
-  }
-
-  // BUTTON HANDLER
-  if (interaction.isButton()) {
-
-    const [action, name] = interaction.customId.split("_");
-    const mon = data[name];
-
-    let page = parseInt(interaction.message.embeds[0].footer.text.split(" ")[1]) - 1;
-
-    if (action === "next") page++;
-    if (action === "prev") page--;
-
-    if (page < 0) page = mon.images.length - 1;
-    if (page >= mon.images.length) page = 0;
-
-    const embed = EmbedBuilder.from(interaction.message.embeds[0])
-      .setImage(mon.images[page])
-      .setFooter({ text: `Image ${page + 1} / ${mon.images.length}` });
-
-    await interaction.update({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
   }
 });
 
