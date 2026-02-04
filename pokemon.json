@@ -1,0 +1,28 @@
+{
+  "gengar": [
+    {
+      "name": "Air Balloon",
+      "item": "Air Balloon",
+      "ability": "Levitate",
+      "moves": ["Shadow Ball", "Sludge Wave", "Focus Blast", "Taunt"]
+    },
+    {
+      "name": "Destiny Bond",
+      "item": "Air Balloon",
+      "ability": "Levitate",
+      "moves": ["Destiny Bond", "Shadow Ball", "Sludge Bomb", "Taunt"]
+    },
+    {
+      "name": "Bold Counter",
+      "item": "Black Sludge",
+      "ability": "Levitate",
+      "moves": ["Shadow Ball", "Counter", "Trick", "Taunt"]
+    },
+    {
+      "name": "Choice Specs",
+      "item": "Choice Specs",
+      "ability": "Levitate",
+      "moves": ["Shadow Ball", "Sludge Wave", "Focus Blast", "Trick"]
+    }
+  ]
+}
