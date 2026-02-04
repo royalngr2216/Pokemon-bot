@@ -1,28 +1,39 @@
 {
-  "gengar": [
-    {
-      "name": "Air Balloon",
-      "item": "Air Balloon",
-      "ability": "Levitate",
-      "moves": ["Shadow Ball", "Sludge Wave", "Focus Blast", "Taunt"]
-    },
-    {
-      "name": "Destiny Bond",
-      "item": "Air Balloon",
-      "ability": "Levitate",
-      "moves": ["Destiny Bond", "Shadow Ball", "Sludge Bomb", "Taunt"]
-    },
-    {
-      "name": "Bold Counter",
-      "item": "Black Sludge",
-      "ability": "Levitate",
-      "moves": ["Shadow Ball", "Counter", "Trick", "Taunt"]
-    },
-    {
-      "name": "Choice Specs",
-      "item": "Choice Specs",
-      "ability": "Levitate",
-      "moves": ["Shadow Ball", "Sludge Wave", "Focus Blast", "Trick"]
-    }
-  ]
+  "gengar": {
+    "image": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png",
+    "sets": [
+      {
+        "name": "Air Balloon",
+        "item": "Air Balloon",
+        "ability": "Levitate",
+        "evs": "252 SpA / 4 SpD / 252 Spe",
+        "nature": "Timid",
+        "moves": ["Shadow Ball", "Sludge Wave", "Focus Blast", "Taunt"]
+      },
+      {
+        "name": "Destiny Bond",
+        "item": "Air Balloon",
+        "ability": "Levitate",
+        "evs": "32 HP / 144 SpA / 80 Def / 252 Spe",
+        "nature": "Timid",
+        "moves": ["Destiny Bond", "Shadow Ball", "Sludge Bomb", "Taunt"]
+      },
+      {
+        "name": "Bold Counter",
+        "item": "Black Sludge",
+        "ability": "Levitate",
+        "evs": "36 HP / 176 Def / 68 SpA / 220 Spe",
+        "nature": "Bold",
+        "moves": ["Shadow Ball", "Counter", "Trick", "Taunt"]
+      },
+      {
+        "name": "Choice Specs",
+        "item": "Choice Specs",
+        "ability": "Levitate",
+        "evs": "252 SpA / 4 SpD / 252 Spe",
+        "nature": "Timid",
+        "moves": ["Shadow Ball", "Sludge Wave", "Focus Blast", "Trick"]
+      }
+    ]
+  }
 }
