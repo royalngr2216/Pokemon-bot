@@ -8,33 +8,64 @@ const {
 } = require("discord.js");
 const fs = require("fs");
 
+const OWNER_ID = "YOUR_DISCORD_ID_HERE"; // PUT YOUR ID HERE
+
 const data = JSON.parse(fs.readFileSync("./pokemon.json"));
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-client.once("ready", async () => {
-  console.log("Bot Online!");
+async function registerCommands() {
+  await client.application.commands.set([
+    {
+      name: "pokemon",
+      description: "View Pokémon",
+      options: [
+        {
+          name: "name",
+          description: "Pokemon name",
+          type: 3,
+          required: true
+        }
+      ]
+    },
+    {
+      name: "restart",
+      description: "Restart bot (owner only)"
+    }
+  ]);
+}
 
-  await client.application.commands.create({
-    name: "pokemon",
-    description: "View Pokémon sets",
-    options: [
-      {
-        name: "name",
-        description: "Pokemon name",
-        type: 3,
-        required: true
-      }
-    ]
-  });
+client.once("ready", async () => {
+  console.log("Bot Online");
+  await registerCommands();
 });
 
+// SLASH COMMANDS
 client.on("interactionCreate", async interaction => {
 
-  // SLASH COMMAND
   if (interaction.isChatInputCommand()) {
+
+    // RESTART COMMAND
+    if (interaction.commandName === "restart") {
+
+      if (interaction.user.id !== OWNER_ID) {
+        return interaction.reply({ content: "Not allowed.", ephemeral: true });
+      }
+
+      await interaction.reply("Restarting bot...");
+
+      // Remove commands
+      await client.application.commands.set([]);
+
+      console.log("Commands cleared. Restarting.");
+
+      // Exit process (GitHub will relaunch later)
+      setTimeout(() => process.exit(0), 2000);
+    }
+
+    // POKEMON COMMAND
     if (interaction.commandName === "pokemon") {
       const name = interaction.options.getString("name").toLowerCase();
       const mon = data[name];
@@ -44,7 +75,7 @@ client.on("interactionCreate", async interaction => {
       }
 
       const embed = new EmbedBuilder()
-        .setTitle(`✨ ${name.toUpperCase()}`)
+        .setTitle(name.toUpperCase())
         .setColor(0x8e44ad)
         .setThumbnail(mon.icon)
         .setImage(mon.images[0])
