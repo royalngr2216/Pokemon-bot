@@ -12,7 +12,7 @@ client.once("ready", async () => {
 
   await client.application.commands.create({
     name: "gengar",
-    description: "Show beautiful Gengar movesets"
+    description: "Show beautiful Gengar competitive sets"
   });
 });
 
@@ -32,11 +32,12 @@ client.on("interactionCreate", async interaction => {
       embed.addFields({
         name: `✨ ${set.name}`,
         value:
-          `**Item:** ${set.item}\n` +
-          `**Ability:** ${set.ability}\n` +
-          `**EVs:** ${set.evs}\n` +
-          `**Nature:** ${set.nature}\n` +
-          `**Moves:** ${set.moves.join(", ")}`
+          `🧢 **Item:** ${set.item}\n` +
+          `🧬 **Ability:** ${set.ability}\n` +
+          `📊 **EVs:** ${set.evs}\n` +
+          `🌿 **Nature:** ${set.nature}\n` +
+          `⚔️ **Moves:**\n• ${set.moves.join("\n• ")}`,
+        inline: true
       });
     });
 
