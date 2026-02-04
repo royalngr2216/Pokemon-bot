@@ -1,4 +1,11 @@
-const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
+const {
+  Client,
+  GatewayIntentBits,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
+} = require("discord.js");
 const fs = require("fs");
 
 const data = JSON.parse(fs.readFileSync("./pokemon.json"));
@@ -11,44 +18,71 @@ client.once("ready", async () => {
   console.log("Bot Online!");
 
   await client.application.commands.create({
-    name: "gengar",
-    description: "Show Gengar competitive sets"
+    name: "pokemon",
+    description: "View Pokémon sets",
+    options: [
+      {
+        name: "name",
+        description: "Pokemon name",
+        type: 3,
+        required: true
+      }
+    ]
   });
 });
 
 client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.commandName === "gengar") {
-    const gengar = data.gengar;
+  // SLASH COMMAND
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === "pokemon") {
+      const name = interaction.options.getString("name").toLowerCase();
+      const mon = data[name];
 
-    const embed = new EmbedBuilder()
-      .setTitle("👻 Gengar — Competitive Sets")
-      .setColor(0x8e44ad)
-      .setThumbnail(gengar.image)
-      .setDescription("━━━━━━━━━━━━━━━━━━━━")
-      .setFooter({ text: "Your personal Pokédex bot" });
-
-    gengar.sets.forEach((set, i) => {
-      embed.addFields({
-        name: `🟪 ${set.name}`,
-        value:
-          `**Item:** ${set.item}\n` +
-          `**Ability:** ${set.ability}\n` +
-          `**EVs:** ${set.evs}\n` +
-          `**Nature:** ${set.nature}\n\n` +
-          `**Moves**\n` +
-          `• ${set.moves.join("\n• ")}`,
-        inline: true
-      });
-
-      // force new row every 2 sets
-      if ((i + 1) % 2 === 0) {
-        embed.addFields({ name: "‎", value: "‎", inline: false });
+      if (!mon) {
+        return interaction.reply({ content: "Pokemon not found.", ephemeral: true });
       }
-    });
 
-    await interaction.reply({ embeds: [embed] });
+      const embed = new EmbedBuilder()
+        .setTitle(`✨ ${name.toUpperCase()}`)
+        .setColor(0x8e44ad)
+        .setThumbnail(mon.icon)
+        .setImage(mon.images[0])
+        .setFooter({ text: `1 / ${mon.images.length}` });
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`prev_${name}`)
+          .setLabel("⬅️")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(`next_${name}`)
+          .setLabel("➡️")
+          .setStyle(ButtonStyle.Secondary)
+      );
+
+      await interaction.reply({ embeds: [embed], components: [row] });
+    }
+  }
+
+  // BUTTONS
+  if (interaction.isButton()) {
+    const [action, name] = interaction.customId.split("_");
+    const mon = data[name];
+
+    let page = parseInt(interaction.message.embeds[0].footer.text.split(" ")[0]) - 1;
+
+    if (action === "next") page++;
+    if (action === "prev") page--;
+
+    if (page < 0) page = mon.images.length - 1;
+    if (page >= mon.images.length) page = 0;
+
+    const embed = EmbedBuilder.from(interaction.message.embeds[0])
+      .setImage(mon.images[page])
+      .setFooter({ text: `${page + 1} / ${mon.images.length}` });
+
+    await interaction.update({ embeds: [embed] });
   }
 });
 
