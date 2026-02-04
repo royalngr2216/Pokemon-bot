@@ -37,6 +37,10 @@ async function registerCommands() {
     {
       name: "restart",
       description: "Restart bot (owner only)"
+    },
+    {
+      name: "ping",
+      description: "Check bot status"
     }
   ]);
 }
@@ -48,7 +52,13 @@ client.once("ready", async () => {
 
 client.on("interactionCreate", async interaction => {
 
-  // restart
+  // /ping
+  if (interaction.isChatInputCommand() && interaction.commandName === "ping") {
+    const latency = Date.now() - interaction.createdTimestamp;
+    return interaction.reply(`${latency} ms!\nBot is Online!`);
+  }
+
+  // /restart (owner only)
   if (interaction.isChatInputCommand() && interaction.commandName === "restart") {
     if (interaction.user.id !== OWNER_ID)
       return interaction.reply({ content: "Not allowed.", ephemeral: true });
@@ -58,7 +68,7 @@ client.on("interactionCreate", async interaction => {
     setTimeout(() => process.exit(0), 1500);
   }
 
-  // pokemon
+  // /pokemon
   if (interaction.isChatInputCommand() && interaction.commandName === "pokemon") {
 
     const name = interaction.options.getString("name").toLowerCase();
@@ -67,13 +77,15 @@ client.on("interactionCreate", async interaction => {
     if (!mon)
       return interaction.reply({ content: "Pokemon not found.", ephemeral: true });
 
-    // main images = your set PNGs ONLY
     const images = mon.sets || [];
+
+    if (images.length === 0)
+      return interaction.reply({ content: "No sets added yet for this Pokémon.", ephemeral: true });
 
     const embed = new EmbedBuilder()
       .setTitle(name.toUpperCase())
       .setColor(0x2b2d31)
-      .setThumbnail(showdownGif(name)) // <-- GIF HERE
+      .setThumbnail(showdownGif(name)) // animated gif thumbnail
       .setImage(images[0])
       .setFooter({ text: `1 / ${images.length}` });
 
