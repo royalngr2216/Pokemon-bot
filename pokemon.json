@@ -1,7 +1,6 @@
 {
   "gengar": {
-    "icon": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png",
-    "images": [
+    "sets": [
       "https://media.discordapp.net/attachments/1428667137446121472/1428667568390013000/image.png?ex=69845adb&is=6983095b&hm=cfb3ad542e24abd44718dec57be07fe54b788181f2f820b55e2ccbacd0745bd2&=&format=webp&quality=lossless&width=916&height=889",
       "https://media.discordapp.net/attachments/1428667137446121472/1428667630151274637/image.png?ex=69845aea&is=6983096a&hm=d18bf14074d059cd1e3b08d80a1e04a5d37213da2b63eb1c17458d24663c1812&=&format=webp&quality=lossless&width=918&height=889",
       "https://media.discordapp.net/attachments/1428667137446121472/1428667704398839848/image.png?ex=69845afc&is=6983097c&hm=3984c9648c132f88196f0fb70f1291d613a204d117831ef769c712e689e83e82&=&format=webp&quality=lossless&width=1090&height=794"
@@ -9,8 +8,7 @@
   },
 
   "charizard": {
-    "icon": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/6.png",
-    "images": [
+    "sets": [
       "PASTE_CHARIZARD_PNG_1",
       "PASTE_CHARIZARD_PNG_2"
     ]
