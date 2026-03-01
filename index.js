@@ -16,8 +16,6 @@ const {
 } = require("discord.js");
 const fs = require("fs");
 
-const OWNER_ID = "1287545546231255092";
-
 const pokemon = JSON.parse(fs.readFileSync("./pokemon.json"));
 
 const client = new Client({
@@ -43,10 +41,6 @@ async function registerCommands() {
       ]
     },
     {
-      name: "restart",
-      description: "Restart bot (owner only)"
-    },
-    {
       name: "ping",
       description: "Check bot status"
     }
@@ -63,37 +57,29 @@ client.on("interactionCreate", async interaction => {
   // /ping
   if (interaction.isChatInputCommand() && interaction.commandName === "ping") {
     const latency = Date.now() - interaction.createdTimestamp;
-    return interaction.reply(`${latency} Backshots!\nBot is Online!`);
-  }
-
-  // /restart (owner only)
-  if (interaction.isChatInputCommand() && interaction.commandName === "restart") {
-    if (interaction.user.id !== OWNER_ID)
-      return interaction.reply({ content: "Not allowed.", ephemeral: true });
-
-    await interaction.reply("Restarting...");
-    await client.application.commands.set([]);
-    setTimeout(() => process.exit(0), 1500);
+    return interaction.reply(`${latency} ms\nBot is Online!`);
   }
 
   // /pokemon
   if (interaction.isChatInputCommand() && interaction.commandName === "pokemon") {
 
+    await interaction.deferReply(); // ⬅️ prevents timeout
+
     const name = interaction.options.getString("name").toLowerCase();
     const mon = pokemon[name];
 
     if (!mon)
-      return interaction.reply({ content: "Pokemon not found.", ephemeral: true });
+      return interaction.editReply("Pokemon not found.");
 
     const images = mon.sets || [];
 
     if (images.length === 0)
-      return interaction.reply({ content: "No sets added yet for this Pokémon.", ephemeral: true });
+      return interaction.editReply("No sets added yet for this Pokémon.");
 
     const embed = new EmbedBuilder()
       .setTitle(name.toUpperCase())
       .setColor(0x2b2d31)
-      .setThumbnail(showdownGif(name)) // animated gif thumbnail
+      .setThumbnail(showdownGif(name))
       .setImage(images[0])
       .setFooter({ text: `1 / ${images.length}` });
 
@@ -108,7 +94,7 @@ client.on("interactionCreate", async interaction => {
         .setStyle(ButtonStyle.Secondary)
     );
 
-    await interaction.reply({ embeds: [embed], components: [row] });
+    await interaction.editReply({ embeds: [embed], components: [row] });
   }
 
   // buttons
