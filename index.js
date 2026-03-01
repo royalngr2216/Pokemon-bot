@@ -14,6 +14,7 @@ const {
   ButtonBuilder,
   ButtonStyle
 } = require("discord.js");
+
 const fs = require("fs");
 
 const pokemon = JSON.parse(fs.readFileSync("./pokemon.json"));
@@ -26,6 +27,7 @@ function showdownGif(name) {
   return `https://play.pokemonshowdown.com/sprites/xyani/${name}.gif`;
 }
 
+// 🔥 Register commands
 async function registerCommands() {
   await client.application.commands.set([
     {
@@ -47,11 +49,13 @@ async function registerCommands() {
   ]);
 }
 
+// ✅ Ready event
 client.once("ready", async () => {
-  console.log("Bot Online");
+  console.log(`Bot Online as ${client.user.tag}`);
   await registerCommands();
 });
 
+// ✅ Interaction handler
 client.on("interactionCreate", async interaction => {
 
   // /ping
@@ -63,13 +67,12 @@ client.on("interactionCreate", async interaction => {
   // /pokemon
   if (interaction.isChatInputCommand() && interaction.commandName === "pokemon") {
 
-    await interaction.deferReply(); // ⬅️ prevents timeout
+    await interaction.deferReply();
 
     const name = interaction.options.getString("name").toLowerCase();
     const mon = pokemon[name];
 
-    if (!mon)
-      return interaction.editReply("Pokemon not found.");
+    if (!mon) return interaction.editReply("Pokemon not found.");
 
     const images = mon.sets || [];
 
@@ -97,13 +100,15 @@ client.on("interactionCreate", async interaction => {
     await interaction.editReply({ embeds: [embed], components: [row] });
   }
 
-  // buttons
+  // 🔁 Button pagination
   if (interaction.isButton()) {
     const [action, name] = interaction.customId.split("_");
+
     const mon = pokemon[name];
     const images = mon.sets || [];
 
-    let page = parseInt(interaction.message.embeds[0].footer.text.split(" ")[0]) - 1;
+    let page =
+      parseInt(interaction.message.embeds[0].footer.text.split(" ")[0]) - 1;
 
     if (action === "next") page++;
     if (action === "prev") page--;
@@ -119,5 +124,17 @@ client.on("interactionCreate", async interaction => {
   }
 });
 
+
+// 🔥 SHOW ALL ERRORS IN RENDER LOGS
+client.on("error", console.error);
+client.on("warn", console.warn);
+process.on("unhandledRejection", console.error);
+process.on("uncaughtException", console.error);
+
+// 🔐 TOKEN CHECK
 console.log("TOKEN CHECK:", process.env.TOKEN ? "FOUND" : "MISSING");
-client.login(process.env.TOKEN);
+
+// 🚀 LOGIN WITH EXPLICIT RESULT
+client.login(process.env.TOKEN)
+  .then(() => console.log("LOGIN SUCCESS"))
+  .catch(err => console.error("LOGIN ERROR:", err));
