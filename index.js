@@ -13,29 +13,36 @@ const {
   ButtonStyle
 } = require("discord.js");
 
-const fs = require("fs");
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-// 🔥 LOAD ALL POKEMON FROM /data
 const pokemon = {};
 
-fs.readdirSync("./data").forEach(folder => {
-  try {
-    const files = fs.readdirSync(`./data/${folder}`)
-      .filter(f => f.endsWith(".png"));
+async function loadPokemon() {
+  const res = await fetch("https://api.github.com/repos/royalngr2216/Pokemon-bot/contents/data");
+  const folders = await res.json();
 
-    if (files.length === 0) return;
+  for (const folder of folders) {
+    if (folder.type !== "dir") continue;
 
-    pokemon[folder.toLowerCase()] = {
-      name: folder,
-      sets: files.map(file =>
-        `https://raw.githubusercontent.com/royalngr2216/Pokemon-bot/main/data/${folder}/${file}`
-      )
+    const name = folder.name;
+
+    const filesRes = await fetch(folder.url);
+    const files = await filesRes.json();
+
+    const images = files
+      .filter(f => f.name.endsWith(".png"))
+      .map(f => f.download_url);
+
+    if (images.length === 0) continue;
+
+    pokemon[name.toLowerCase()] = {
+      name,
+      sets: images
     };
-  } catch {}
-});
+  }
 
-// ✅ DEBUG LOG
-console.log("Loaded Pokemon:", Object.keys(pokemon));
+  console.log("Loaded Pokemon:", Object.keys(pokemon));
+}
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
@@ -45,9 +52,10 @@ function showdownGif(name) {
   return `https://play.pokemonshowdown.com/sprites/xyani/${name.toLowerCase()}.gif`;
 }
 
-// 🚀 REGISTER COMMAND
 client.once("ready", async () => {
   console.log("Bot Online");
+
+  await loadPokemon();
 
   await client.application.commands.set([
     {
@@ -66,7 +74,6 @@ client.once("ready", async () => {
   ]);
 });
 
-// 🔁 INTERACTIONS
 client.on("interactionCreate", async interaction => {
 
   // 🔍 AUTOCOMPLETE
@@ -149,5 +156,4 @@ client.on("interactionCreate", async interaction => {
   }
 });
 
-// 🔐 LOGIN
 client.login(process.env.TOKEN);
