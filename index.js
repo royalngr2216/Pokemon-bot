@@ -15,7 +15,7 @@ const {
 
 const fs = require("fs");
 
-// 🔥 AUTO LOAD FROM data/
+// 🔥 LOAD ALL POKEMON FROM /data
 const pokemon = {};
 
 fs.readdirSync("./data").forEach(folder => {
@@ -25,7 +25,8 @@ fs.readdirSync("./data").forEach(folder => {
 
     if (files.length === 0) return;
 
-    pokemon[folder] = {
+    pokemon[folder.toLowerCase()] = {
+      name: folder,
       sets: files.map(file =>
         `https://raw.githubusercontent.com/royalngr2216/Pokemon-bot/main/data/${folder}/${file}`
       )
@@ -33,14 +34,18 @@ fs.readdirSync("./data").forEach(folder => {
   } catch {}
 });
 
+// ✅ DEBUG LOG
+console.log("Loaded Pokemon:", Object.keys(pokemon));
+
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
 function showdownGif(name) {
-  return `https://play.pokemonshowdown.com/sprites/xyani/${name}.gif`;
+  return `https://play.pokemonshowdown.com/sprites/xyani/${name.toLowerCase()}.gif`;
 }
 
+// 🚀 REGISTER COMMAND
 client.once("ready", async () => {
   console.log("Bot Online");
 
@@ -53,48 +58,74 @@ client.once("ready", async () => {
           name: "name",
           description: "Pokemon name",
           type: 3,
-          required: true
+          required: true,
+          autocomplete: true
         }
       ]
     }
   ]);
 });
 
+// 🔁 INTERACTIONS
 client.on("interactionCreate", async interaction => {
 
+  // 🔍 AUTOCOMPLETE
+  if (interaction.isAutocomplete()) {
+    const focused = interaction.options.getFocused().toLowerCase();
+
+    const choices = Object.keys(pokemon);
+
+    const filtered = choices
+      .filter(name => name.includes(focused))
+      .slice(0, 25);
+
+    return interaction.respond(
+      filtered.map(name => ({
+        name: pokemon[name].name,
+        value: name
+      }))
+    );
+  }
+
+  // 🎯 COMMAND
   if (interaction.isChatInputCommand()) {
     if (interaction.commandName === "pokemon") {
 
       await interaction.deferReply();
 
-      const name = interaction.options.getString("name").toLowerCase();
-      const mon = pokemon[name];
+      const input = interaction.options.getString("name").toLowerCase();
+      const mon = pokemon[input];
 
       if (!mon) return interaction.editReply("Pokemon not found.");
 
       const images = mon.sets;
 
       const embed = new EmbedBuilder()
-        .setTitle(name.toUpperCase())
-        .setThumbnail(showdownGif(name))
+        .setTitle(mon.name.toUpperCase())
+        .setColor(0x2b2d31)
+        .setThumbnail(showdownGif(mon.name))
         .setImage(images[0])
         .setFooter({ text: `1 / ${images.length}` });
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(`prev_${name}`)
+          .setCustomId(`prev_${input}`)
           .setEmoji("⬅️")
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
-          .setCustomId(`next_${name}`)
+          .setCustomId(`next_${input}`)
           .setEmoji("➡️")
           .setStyle(ButtonStyle.Secondary)
       );
 
-      await interaction.editReply({ embeds: [embed], components: [row] });
+      await interaction.editReply({
+        embeds: [embed],
+        components: [row]
+      });
     }
   }
 
+  // 🔁 BUTTONS
   if (interaction.isButton()) {
     const [action, name] = interaction.customId.split("_");
 
@@ -118,4 +149,5 @@ client.on("interactionCreate", async interaction => {
   }
 });
 
+// 🔐 LOGIN
 client.login(process.env.TOKEN);
