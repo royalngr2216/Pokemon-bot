@@ -15,13 +15,30 @@ const {
 
 const fs = require("fs");
 
+// 🎨 RANDOM COLOR FUNCTION
+function getRandomColor() {
+  const colors = [
+    0x5865F2,
+    0x57F287,
+    0xFEE75C,
+    0xEB459E,
+    0xED4245,
+    0x3498DB,
+    0x9B59B6,
+    0x1ABC9C,
+    0xE67E22,
+    0x95A5A6
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
 // 🔥 LOAD POKEMON FROM /data
 const pokemon = {};
 
 fs.readdirSync("./data").forEach(folder => {
   try {
     const files = fs.readdirSync(`./data/${folder}`)
-      .filter(f => f.includes(".png"));
+      .filter(f => f.toLowerCase().endsWith(".png"));
 
     if (files.length === 0) return;
 
@@ -66,7 +83,7 @@ client.once("clientReady", async () => {
   ]);
 });
 
-// 🎯 MAIN INTERACTION
+// 🎯 INTERACTIONS
 client.on("interactionCreate", async interaction => {
 
   // 🔍 AUTOCOMPLETE
@@ -98,17 +115,17 @@ client.on("interactionCreate", async interaction => {
 
       if (!mon) {
         return interaction.editReply({
-          content: "❌ Pokémon not found. Try using autocomplete."
+          content: "❌ Pokémon not found. Try autocomplete."
         });
       }
 
       let page = 0;
       const images = mon.sets;
+      const color = getRandomColor(); // 🎨 one-time color
 
       const embed = new EmbedBuilder()
         .setTitle(`⚔️ ${mon.name.toUpperCase()} Sets`)
-        .setDescription(`Competitive Pokémon sets\n\nUse ⬅️ ➡️ to browse`)
-        .setColor(0x5865F2)
+        .setColor(color)
         .setThumbnail(showdownGif(mon.name))
         .setImage(images[page])
         .setFooter({
@@ -146,7 +163,7 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
-  // 🔁 BUTTON HANDLER
+  // 🔁 BUTTONS
   if (interaction.isButton()) {
     const [action, name] = interaction.customId.split("_");
 
@@ -164,7 +181,9 @@ client.on("interactionCreate", async interaction => {
     if (page < 0) page = images.length - 1;
     if (page >= images.length) page = 0;
 
-    const embed = EmbedBuilder.from(interaction.message.embeds[0])
+    const oldEmbed = interaction.message.embeds[0];
+
+    const embed = EmbedBuilder.from(oldEmbed)
       .setImage(images[page])
       .setFooter({
         text: `Set ${page + 1} of ${images.length}`,
