@@ -15,24 +15,17 @@ const {
 
 const fs = require("fs");
 
-// 🎨 RANDOM COLOR FUNCTION
+// 🎨 RANDOM COLOR
 function getRandomColor() {
   const colors = [
-    0x5865F2,
-    0x57F287,
-    0xFEE75C,
-    0xEB459E,
-    0xED4245,
-    0x3498DB,
-    0x9B59B6,
-    0x1ABC9C,
-    0xE67E22,
-    0x95A5A6
+    0x5865F2, 0x57F287, 0xFEE75C, 0xEB459E,
+    0xED4245, 0x3498DB, 0x9B59B6, 0x1ABC9C,
+    0xE67E22, 0x95A5A6
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
-// 🔥 LOAD POKEMON FROM /data
+// 🔥 LOAD DATA
 const pokemon = {};
 
 fs.readdirSync("./data").forEach(folder => {
@@ -40,7 +33,7 @@ fs.readdirSync("./data").forEach(folder => {
     const files = fs.readdirSync(`./data/${folder}`)
       .filter(f => f.toLowerCase().endsWith(".png"));
 
-    if (files.length === 0) return;
+    if (!files.length) return;
 
     pokemon[folder.toLowerCase()] = {
       name: folder,
@@ -51,13 +44,17 @@ fs.readdirSync("./data").forEach(folder => {
   } catch {}
 });
 
-// 🧪 DEBUG
 console.log("Loaded Pokemon:", Object.keys(pokemon));
 
+// 🤖 CLIENT (NOW WITH DM SUPPORT)
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.DirectMessages
+  ]
 });
 
+// GIF
 function showdownGif(name) {
   return `https://play.pokemonshowdown.com/sprites/xyani/${name.toLowerCase()}.gif`;
 }
@@ -70,6 +67,7 @@ client.once("clientReady", async () => {
     {
       name: "pokemon",
       description: "View Pokémon sets",
+      dm_permission: true, // ⭐ THIS ENABLES DM USE
       options: [
         {
           name: "name",
@@ -121,7 +119,7 @@ client.on("interactionCreate", async interaction => {
 
       let page = 0;
       const images = mon.sets;
-      const color = getRandomColor(); // 🎨 one-time color
+      const color = getRandomColor();
 
       const embed = new EmbedBuilder()
         .setTitle(`⚔️ ${mon.name.toUpperCase()} Sets`)
