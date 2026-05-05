@@ -15,13 +15,13 @@ const {
 
 const fs = require("fs");
 
-// 🔥 LOAD FROM LOCAL FILES (RELIABLE)
+// 🔥 LOAD POKEMON FROM /data
 const pokemon = {};
 
 fs.readdirSync("./data").forEach(folder => {
   try {
     const files = fs.readdirSync(`./data/${folder}`)
-      .filter(f => f.endsWith(".png"));
+      .filter(f => f.includes(".png"));
 
     if (files.length === 0) return;
 
@@ -45,13 +45,14 @@ function showdownGif(name) {
   return `https://play.pokemonshowdown.com/sprites/xyani/${name.toLowerCase()}.gif`;
 }
 
+// 🚀 READY
 client.once("clientReady", async () => {
   console.log("Bot Online");
 
   await client.application.commands.set([
     {
       name: "pokemon",
-      description: "View Pokémon",
+      description: "View Pokémon sets",
       options: [
         {
           name: "name",
@@ -65,6 +66,7 @@ client.once("clientReady", async () => {
   ]);
 });
 
+// 🎯 MAIN INTERACTION
 client.on("interactionCreate", async interaction => {
 
   // 🔍 AUTOCOMPLETE
@@ -72,7 +74,9 @@ client.on("interactionCreate", async interaction => {
     const focused = interaction.options.getFocused().toLowerCase();
 
     const filtered = Object.keys(pokemon)
-      .filter(name => name.includes(focused))
+      .filter(name =>
+        name.startsWith(focused) || name.includes(focused)
+      )
       .slice(0, 25);
 
     return interaction.respond(
@@ -92,24 +96,46 @@ client.on("interactionCreate", async interaction => {
       const input = interaction.options.getString("name").toLowerCase();
       const mon = pokemon[input];
 
-      if (!mon) return interaction.editReply("Pokemon not found.");
+      if (!mon) {
+        return interaction.editReply({
+          content: "❌ Pokémon not found. Try using autocomplete."
+        });
+      }
 
+      let page = 0;
       const images = mon.sets;
 
       const embed = new EmbedBuilder()
-        .setTitle(mon.name.toUpperCase())
+        .setTitle(`⚔️ ${mon.name.toUpperCase()} Sets`)
+        .setDescription(`Competitive Pokémon sets\n\nUse ⬅️ ➡️ to browse`)
+        .setColor(0x5865F2)
         .setThumbnail(showdownGif(mon.name))
-        .setImage(images[0])
-        .setFooter({ text: `1 / ${images.length}` });
+        .setImage(images[page])
+        .setFooter({
+          text: `Set ${page + 1} of ${images.length}`,
+          iconURL: interaction.user.displayAvatarURL()
+        })
+        .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
+          .setCustomId(`first_${input}`)
+          .setEmoji("⏪")
+          .setStyle(ButtonStyle.Secondary),
+
+        new ButtonBuilder()
           .setCustomId(`prev_${input}`)
           .setEmoji("⬅️")
-          .setStyle(ButtonStyle.Secondary),
+          .setStyle(ButtonStyle.Primary),
+
         new ButtonBuilder()
           .setCustomId(`next_${input}`)
           .setEmoji("➡️")
+          .setStyle(ButtonStyle.Primary),
+
+        new ButtonBuilder()
+          .setCustomId(`last_${input}`)
+          .setEmoji("⏩")
           .setStyle(ButtonStyle.Secondary)
       );
 
@@ -120,7 +146,7 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
-  // 🔁 BUTTONS
+  // 🔁 BUTTON HANDLER
   if (interaction.isButton()) {
     const [action, name] = interaction.customId.split("_");
 
@@ -128,20 +154,28 @@ client.on("interactionCreate", async interaction => {
     const images = mon.sets;
 
     let page =
-      parseInt(interaction.message.embeds[0].footer.text.split(" ")[0]) - 1;
+      parseInt(interaction.message.embeds[0].footer.text.split(" ")[1]) - 1;
 
     if (action === "next") page++;
     if (action === "prev") page--;
+    if (action === "first") page = 0;
+    if (action === "last") page = images.length - 1;
 
     if (page < 0) page = images.length - 1;
     if (page >= images.length) page = 0;
 
     const embed = EmbedBuilder.from(interaction.message.embeds[0])
       .setImage(images[page])
-      .setFooter({ text: `${page + 1} / ${images.length}` });
+      .setFooter({
+        text: `Set ${page + 1} of ${images.length}`,
+        iconURL: interaction.user.displayAvatarURL()
+      });
 
-    await interaction.update({ embeds: [embed] });
+    await interaction.update({
+      embeds: [embed]
+    });
   }
 });
 
+// 🔐 LOGIN
 client.login(process.env.TOKEN);
