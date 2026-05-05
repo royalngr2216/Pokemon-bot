@@ -13,36 +13,29 @@ const {
   ButtonStyle
 } = require("discord.js");
 
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+const fs = require("fs");
 
+// 🔥 LOAD FROM LOCAL FILES (RELIABLE)
 const pokemon = {};
 
-async function loadPokemon() {
-  const res = await fetch("https://api.github.com/repos/royalngr2216/Pokemon-bot/contents/data");
-  const folders = await res.json();
+fs.readdirSync("./data").forEach(folder => {
+  try {
+    const files = fs.readdirSync(`./data/${folder}`)
+      .filter(f => f.endsWith(".png"));
 
-  for (const folder of folders) {
-    if (folder.type !== "dir") continue;
+    if (files.length === 0) return;
 
-    const name = folder.name;
-
-    const filesRes = await fetch(folder.url);
-    const files = await filesRes.json();
-
-    const images = files
-      .filter(f => f.name.endsWith(".png"))
-      .map(f => f.download_url);
-
-    if (images.length === 0) continue;
-
-    pokemon[name.toLowerCase()] = {
-      name,
-      sets: images
+    pokemon[folder.toLowerCase()] = {
+      name: folder,
+      sets: files.map(file =>
+        `https://raw.githubusercontent.com/royalngr2216/pokemon-bot/main/data/${folder}/${file}`
+      )
     };
-  }
+  } catch {}
+});
 
-  console.log("Loaded Pokemon:", Object.keys(pokemon));
-}
+// 🧪 DEBUG
+console.log("Loaded Pokemon:", Object.keys(pokemon));
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds]
@@ -52,10 +45,8 @@ function showdownGif(name) {
   return `https://play.pokemonshowdown.com/sprites/xyani/${name.toLowerCase()}.gif`;
 }
 
-client.once("ready", async () => {
+client.once("clientReady", async () => {
   console.log("Bot Online");
-
-  await loadPokemon();
 
   await client.application.commands.set([
     {
@@ -80,9 +71,7 @@ client.on("interactionCreate", async interaction => {
   if (interaction.isAutocomplete()) {
     const focused = interaction.options.getFocused().toLowerCase();
 
-    const choices = Object.keys(pokemon);
-
-    const filtered = choices
+    const filtered = Object.keys(pokemon)
       .filter(name => name.includes(focused))
       .slice(0, 25);
 
@@ -109,7 +98,6 @@ client.on("interactionCreate", async interaction => {
 
       const embed = new EmbedBuilder()
         .setTitle(mon.name.toUpperCase())
-        .setColor(0x2b2d31)
         .setThumbnail(showdownGif(mon.name))
         .setImage(images[0])
         .setFooter({ text: `1 / ${images.length}` });
