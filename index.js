@@ -27,7 +27,7 @@ fs.readdirSync("./data").forEach(folder => {
 
     pokemon[folder] = {
       sets: files.map(file =>
-        `https://raw.githubusercontent.com/royalngr2216/pokemon-bot/main/data/${folder}/${file}`
+        `https://raw.githubusercontent.com/royalngr2216/Pokemon-bot/main/data/${folder}/${file}`
       )
     };
   } catch {}
