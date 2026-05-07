@@ -384,7 +384,7 @@ module.exports = client => {
 
                 `### Players\n` +
 
-                `${in.user} vs ${opponent}\n\n` +
+                `${interaction.user} vs ${opponent}\n\n` +
 
                 `### Match Time\n` +
 
@@ -410,7 +410,7 @@ module.exports = client => {
 
               .setTimestamp();
 
-          return in.reply({
+          return interaction.reply({
 
             content:
               `${opponent}`,
@@ -427,7 +427,7 @@ module.exports = client => {
       // =========================
 
       if (
-        in.isButton()
+        interaction.isButton()
       ) {
 
         // ==================================================
@@ -435,7 +435,7 @@ module.exports = client => {
         // ==================================================
 
         if (
-          in.customId.startsWith(
+          interaction.customId.startsWith(
             "matches_"
           )
         ) {
@@ -453,7 +453,12 @@ module.exports = client => {
             await Match.find({
 
               guildId:
-                interaction.guild.id
+                interaction.guild.id,
+
+              timestamp: {
+                $gte:
+                  Math.floor(Date.now() / 1000)
+              }
 
             });
 
