@@ -26,6 +26,13 @@ const connectMongo =
   require("./database/mongoose");
 
 // =========================
+// REMINDERS
+// =========================
+
+const startReminders =
+  require("./systems/reminders");
+
+// =========================
 // CLIENT
 // =========================
 
@@ -35,7 +42,9 @@ const client = new Client({
 
     GatewayIntentBits.Guilds,
 
-    GatewayIntentBits.DirectMessages
+    GatewayIntentBits.DirectMessages,
+
+    GatewayIntentBits.GuildMessages
 
   ]
 });
@@ -122,6 +131,12 @@ client.once(
 // =========================
 
 connectMongo();
+
+// =========================
+// START REMINDER SYSTEM
+// =========================
+
+startReminders(client);
 
 // =========================
 // LOGIN
