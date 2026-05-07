@@ -2,11 +2,268 @@ const {
   EmbedBuilder
 } = require("discord.js");
 
+const moment =
+  require("moment-timezone");
+
 module.exports = client => {
 
   client.on(
     "interactionCreate",
     async interaction => {
+
+      // =========================
+      // MODAL SUBMIT
+      // =========================
+
+      if (
+        interaction.isModalSubmit()
+      ) {
+
+        if (
+          interaction.customId ===
+          "tz_modal"
+        ) {
+
+          const time =
+            interaction.fields.getTextInputValue(
+              "tz_time"
+            );
+
+          const days =
+            parseInt(
+              interaction.fields.getTextInputValue(
+                "tz_days"
+              )
+            );
+
+          let timezone =
+            interaction.fields
+              .getTextInputValue(
+                "tz_timezone"
+              )
+              .trim();
+
+          // =====================
+          // VALIDATE TIME
+          // =====================
+
+          const timeRegex =
+            /^([01]?\d|2[0-3]):([0-5]\d)$/;
+
+          if (
+            !timeRegex.test(time)
+          ) {
+
+            return interaction.reply({
+
+              content:
+                "❌ Invalid time format.\nUse `21:30`",
+
+              ephemeral: true
+            });
+          }
+
+          // =====================
+          // VALIDATE DAYS
+          // =====================
+
+          if (
+            isNaN(days) ||
+            days < 0
+          ) {
+
+            return interaction.reply({
+
+              content:
+                "❌ Invalid days value.",
+
+              ephemeral: true
+            });
+          }
+
+          // =====================
+          // NORMALIZE GMT OFFSET
+          // =====================
+
+          timezone =
+            timezone.replace(/\s+/g, "");
+
+          // +7:30 -> +07:30
+          // -7:45 -> -07:45
+
+          timezone =
+            timezone.replace(
+              /^([+-]?)(\d{1}):/,
+              "$10$2:"
+            );
+
+          // +0 -> +00:00
+          // -0 -> -00:00
+          // 0 -> 00:00
+
+          if (
+            timezone === "0"
+          ) {
+            timezone = "00:00";
+          }
+
+          if (
+            timezone === "+0"
+          ) {
+            timezone = "+00:00";
+          }
+
+          if (
+            timezone === "-0"
+          ) {
+            timezone = "-00:00";
+          }
+
+          // +7 -> +07:00
+          // -8 -> -08:00
+
+          timezone =
+            timezone.replace(
+              /^([+-]?)(\d{1,2})$/,
+              "$1$2:00"
+            );
+
+          timezone =
+            timezone.replace(
+              /^([+-]?)(\d):/,
+              "$10$2:"
+            );
+
+          // =====================
+          // FINAL VALIDATION
+          // =====================
+
+          const tzRegex =
+            /^[+-]?\d{2}:\d{2}$/;
+
+          if (
+            !tzRegex.test(timezone)
+          ) {
+
+            return interaction.reply({
+
+              content:
+                "❌ Invalid GMT offset.\n\nExamples:\n`+5:30`\n`-07:45`\n`00:00`\n`+10`\n`-8`",
+
+              ephemeral: true
+            });
+          }
+
+          // =====================
+          // CHECK REAL-WORLD VALUES
+          // =====================
+
+          const validMinutes = [
+            "00",
+            "15",
+            "30",
+            "45"
+          ];
+
+          const split =
+            timezone.split(":");
+
+          const hourPart =
+            parseInt(split[0]);
+
+          const minutePart =
+            split[1];
+
+          if (
+            hourPart < -12 ||
+            hourPart > 14
+          ) {
+
+            return interaction.reply({
+
+              content:
+                "❌ GMT offset must be between -12 and +14.",
+
+              ephemeral: true
+            });
+          }
+
+          if (
+            !validMinutes.includes(
+              minutePart
+            )
+          ) {
+
+            return interaction.reply({
+
+              content:
+                "❌ Minutes must be 00, 15, 30, or 45.",
+
+              ephemeral: true
+            });
+          }
+
+          // =====================
+          // CREATE TIME
+          // =====================
+
+          const [hours, minutes] =
+            time.split(":");
+
+          const parsed =
+            moment()
+
+              .utcOffset(timezone)
+
+              .add(days, "days")
+
+              .hour(
+                parseInt(hours)
+              )
+
+              .minute(
+                parseInt(minutes)
+              )
+
+              .second(0);
+
+          const unix =
+            Math.floor(
+              parsed.valueOf() / 1000
+            );
+
+          const embed =
+            new EmbedBuilder()
+
+              .setTitle(
+                "Match Time"
+              )
+
+              .setColor(0x5865F2)
+
+              .setDescription(
+
+                `**Scheduled by:** ${interaction.user}\n\n` +
+
+                `### Local Time\n` +
+
+                `<t:${unix}:F>\n\n` +
+
+                `### Relative\n` +
+
+                `<t:${unix}:R>\n\n` +
+
+                `\`${time} • GMT${timezone}\``
+
+              )
+
+              .setTimestamp();
+
+          return interaction.reply({
+            embeds: [embed]
+          });
+        }
+      }
 
       // =========================
       // AUTOCOMPLETE
