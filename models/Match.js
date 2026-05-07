@@ -14,6 +14,11 @@ const matchSchema =
       required: true
     },
 
+    channelId: {
+      type: String,
+      required: true
+    },
+
     player1: {
       type: String,
       required: true
@@ -37,6 +42,11 @@ const matchSchema =
     status: {
       type: String,
       default: "pending"
+    },
+
+    reminded: {
+      type: Boolean,
+      default: false
     }
 
   });
