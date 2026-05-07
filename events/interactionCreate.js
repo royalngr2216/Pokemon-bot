@@ -1,9 +1,15 @@
 const {
-  EmbedBuilder
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } = require("discord.js");
 
 const moment =
   require("moment-timezone");
+
+const Match =
+  require("../models/Match");
 
 module.exports = client => {
 
@@ -18,6 +24,10 @@ module.exports = client => {
       if (
         interaction.isModalSubmit()
       ) {
+
+        // ==================================================
+        // TZ MODAL
+        // ==================================================
 
         if (
           interaction.customId ===
@@ -43,10 +53,6 @@ module.exports = client => {
               )
               .trim();
 
-          // =====================
-          // VALIDATE TIME
-          // =====================
-
           const timeRegex =
             /^([01]?\d|2[0-3]):([0-5]\d)$/;
 
@@ -63,10 +69,6 @@ module.exports = client => {
             });
           }
 
-          // =====================
-          // VALIDATE DAYS
-          // =====================
-
           if (
             isNaN(days) ||
             days < 0
@@ -81,25 +83,14 @@ module.exports = client => {
             });
           }
 
-          // =====================
-          // NORMALIZE GMT OFFSET
-          // =====================
-
           timezone =
             timezone.replace(/\s+/g, "");
-
-          // +7:30 -> +07:30
-          // -7:45 -> -07:45
 
           timezone =
             timezone.replace(
               /^([+-]?)(\d{1}):/,
               "$10$2:"
             );
-
-          // +0 -> +00:00
-          // -0 -> -00:00
-          // 0 -> 00:00
 
           if (
             timezone === "0"
@@ -119,9 +110,6 @@ module.exports = client => {
             timezone = "-00:00";
           }
 
-          // +7 -> +07:00
-          // -8 -> -08:00
-
           timezone =
             timezone.replace(
               /^([+-]?)(\d{1,2})$/,
@@ -134,10 +122,6 @@ module.exports = client => {
               "$10$2:"
             );
 
-          // =====================
-          // FINAL VALIDATION
-          // =====================
-
           const tzRegex =
             /^[+-]?\d{2}:\d{2}$/;
 
@@ -148,64 +132,11 @@ module.exports = client => {
             return interaction.reply({
 
               content:
-                "❌ Invalid GMT offset.\n\nExamples:\n`+5:30`\n`-07:45`\n`00:00`\n`+10`\n`-8`",
+                "❌ Invalid GMT offset.",
 
               ephemeral: true
             });
           }
-
-          // =====================
-          // CHECK REAL-WORLD VALUES
-          // =====================
-
-          const validMinutes = [
-            "00",
-            "15",
-            "30",
-            "45"
-          ];
-
-          const split =
-            timezone.split(":");
-
-          const hourPart =
-            parseInt(split[0]);
-
-          const minutePart =
-            split[1];
-
-          if (
-            hourPart < -12 ||
-            hourPart > 14
-          ) {
-
-            return interaction.reply({
-
-              content:
-                "❌ GMT offset must be between -12 and +14.",
-
-              ephemeral: true
-            });
-          }
-
-          if (
-            !validMinutes.includes(
-              minutePart
-            )
-          ) {
-
-            return interaction.reply({
-
-              content:
-                "❌ Minutes must be 00, 15, 30, or 45.",
-
-              ephemeral: true
-            });
-          }
-
-          // =====================
-          // CREATE TIME
-          // =====================
 
           const [hours, minutes] =
             time.split(":");
@@ -232,10 +163,6 @@ module.exports = client => {
               parsed.valueOf() / 1000
             );
 
-          // =====================
-          // RANDOM COLORS
-          // =====================
-
           const colors = [
 
             0x5865F2,
@@ -244,10 +171,7 @@ module.exports = client => {
             0xEB459E,
             0xED4245,
             0x3498DB,
-            0x9B59B6,
-            0x1ABC9C,
-            0xE67E22,
-            0x95A5A6
+            0x9B59B6
 
           ];
 
@@ -258,10 +182,6 @@ module.exports = client => {
                 colors.length
               )
             ];
-
-          // =====================
-          // EMBED
-          // =====================
 
           const embed =
             new EmbedBuilder()
@@ -294,6 +214,496 @@ module.exports = client => {
             embeds: [embed]
           });
         }
+
+        // ==================================================
+        // SCHEDULE MODAL
+        // ==================================================
+
+        if (
+          interaction.customId.startsWith(
+            "schedule_modal"
+          )
+        ) {
+
+          const opponentId =
+            interaction.customId
+              .split("|")[1];
+
+          const opponent =
+            await client.users.fetch(
+              opponentId
+            );
+
+          const time =
+            interaction.fields.getTextInputValue(
+              "schedule_time"
+            );
+
+          const days =
+            parseInt(
+              interaction.fields.getTextInputValue(
+                "schedule_days"
+              )
+            );
+
+          let timezone =
+            interaction.fields
+              .getTextInputValue(
+                "schedule_timezone"
+              )
+              .trim();
+
+          const notes =
+            interaction.fields.getTextInputValue(
+              "schedule_notes"
+            ) || "No notes.";
+
+          // =====================
+          // NORMALIZE GMT
+          // =====================
+
+          timezone =
+            timezone.replace(/\s+/g, "");
+
+          timezone =
+            timezone.replace(
+              /^([+-]?)(\d{1}):/,
+              "$10$2:"
+            );
+
+          if (
+            timezone === "0"
+          ) {
+            timezone = "00:00";
+          }
+
+          if (
+            timezone === "+0"
+          ) {
+            timezone = "+00:00";
+          }
+
+          if (
+            timezone === "-0"
+          ) {
+            timezone = "-00:00";
+          }
+
+          timezone =
+            timezone.replace(
+              /^([+-]?)(\d{1,2})$/,
+              "$1$2:00"
+            );
+
+          timezone =
+            timezone.replace(
+              /^([+-]?)(\d):/,
+              "$10$2:"
+            );
+
+          // =====================
+          // CREATE TIME
+          // =====================
+
+          const [hours, minutes] =
+            time.split(":");
+
+          const parsed =
+            moment()
+
+              .utcOffset(timezone)
+
+              .add(days, "days")
+
+              .hour(
+                parseInt(hours)
+              )
+
+              .minute(
+                parseInt(minutes)
+              )
+
+              .second(0);
+
+          const unix =
+            Math.floor(
+              parsed.valueOf() / 1000
+            );
+
+          // =====================
+          // MATCH ID
+          // =====================
+
+          const matchId =
+            `SCH-${Math.floor(
+              Math.random() * 999999
+            )}`;
+
+          // =====================
+          // SAVE DATABASE
+          // =====================
+
+          await Match.create({
+
+            matchId,
+
+            guildId:
+              interaction.guild.id,
+
+            player1:
+              interaction.user.id,
+
+            player2:
+              opponent.id,
+
+            timestamp: unix,
+
+            notes,
+
+            status: "pending"
+
+          });
+
+          // =====================
+          // BUTTONS
+          // =====================
+
+          const buttons =
+            new ActionRowBuilder()
+
+              .addComponents(
+
+                new ButtonBuilder()
+
+                  .setCustomId(
+                    `accept_${matchId}`
+                  )
+
+                  .setLabel(
+                    "Accept"
+                  )
+
+                  .setStyle(
+                    ButtonStyle.Success
+                  ),
+
+                new ButtonBuilder()
+
+                  .setCustomId(
+                    `decline_${matchId}`
+                  )
+
+                  .setLabel(
+                    "Decline"
+                  )
+
+                  .setStyle(
+                    ButtonStyle.Danger
+                  )
+              );
+
+          // =====================
+          // EMBED
+          // =====================
+
+          const embed =
+            new EmbedBuilder()
+
+              .setTitle(
+                "Match Scheduled"
+              )
+
+              .setColor(
+                0xFEE75C
+              )
+
+              .setDescription(
+
+                `### Players\n` +
+
+                `${interaction.user} vs ${opponent}\n\n` +
+
+                `### Match Time\n` +
+
+                `<t:${unix}:F>\n\n` +
+
+                `### Relative\n` +
+
+                `<t:${unix}:R>\n\n` +
+
+                `### Notes\n` +
+
+                `${notes}\n\n` +
+
+                `### Status\n` +
+
+                `🟡 Awaiting confirmation`
+
+              )
+
+              .setFooter({
+                text: matchId
+              })
+
+              .setTimestamp();
+
+          return interaction.reply({
+
+            content:
+              `${opponent}`,
+
+            embeds: [embed],
+
+            components: [buttons]
+          });
+        }
+      }
+
+      // =========================
+      // BUTTONS
+      // =========================
+
+      if (
+        interaction.isButton()
+      ) {
+
+        // ==================================================
+        // ACCEPT
+        // ==================================================
+
+        if (
+          interaction.customId.startsWith(
+            "accept_"
+          )
+        ) {
+
+          const matchId =
+            interaction.customId
+              .split("_")[1];
+
+          const match =
+            await Match.findOne({
+              matchId
+            });
+
+          if (!match) {
+
+            return interaction.reply({
+
+              content:
+                "❌ Match not found.",
+
+              ephemeral: true
+            });
+          }
+
+          if (
+            interaction.user.id !==
+            match.player2
+          ) {
+
+            return interaction.reply({
+
+              content:
+                "❌ Only the opponent can accept.",
+
+              ephemeral: true
+            });
+          }
+
+          match.status =
+            "confirmed";
+
+          await match.save();
+
+          const embed =
+            EmbedBuilder.from(
+              interaction.message
+                .embeds[0]
+            )
+
+              .setColor(
+                0x57F287
+              )
+
+              .spliceFields(0, 0)
+
+              .setDescription(
+
+                interaction.message
+                  .embeds[0]
+                  .description
+
+                  .replace(
+                    "🟡 Awaiting confirmation",
+                    "🟢 Confirmed"
+                  )
+              );
+
+          return interaction.update({
+
+            embeds: [embed],
+
+            components: []
+          });
+        }
+
+        // ==================================================
+        // DECLINE
+        // ==================================================
+
+        if (
+          interaction.customId.startsWith(
+            "decline_"
+          )
+        ) {
+
+          const matchId =
+            interaction.customId
+              .split("_")[1];
+
+          const match =
+            await Match.findOne({
+              matchId
+            });
+
+          if (!match) {
+
+            return interaction.reply({
+
+              content:
+                "❌ Match not found.",
+
+              ephemeral: true
+            });
+          }
+
+          if (
+            interaction.user.id !==
+            match.player2
+          ) {
+
+            return interaction.reply({
+
+              content:
+                "❌ Only the opponent can decline.",
+
+              ephemeral: true
+            });
+          }
+
+          match.status =
+            "declined";
+
+          await match.save();
+
+          const embed =
+            EmbedBuilder.from(
+              interaction.message
+                .embeds[0]
+            )
+
+              .setColor(
+                0xED4245
+              )
+
+              .setDescription(
+
+                interaction.message
+                  .embeds[0]
+                  .description
+
+                  .replace(
+                    "🟡 Awaiting confirmation",
+                    "🔴 Declined"
+                  )
+              );
+
+          return interaction.update({
+
+            embeds: [embed],
+
+            components: []
+          });
+        }
+
+        // ==================================================
+        // POKEMON BUTTONS
+        // ==================================================
+
+        const pokemonCommand =
+          client.commands.get(
+            "pokemon"
+          );
+
+        if (!pokemonCommand)
+          return;
+
+        const pokemon =
+          pokemonCommand.pokemon;
+
+        const [action, name] =
+          interaction.customId.split("_");
+
+        const mon =
+          pokemon[name];
+
+        if (!mon) return;
+
+        const images =
+          mon.sets;
+
+        let page =
+          parseInt(
+            interaction.message
+              .embeds[0]
+              .footer.text
+              .split(" ")[1]
+          ) - 1;
+
+        if (action === "next")
+          page++;
+
+        if (action === "prev")
+          page--;
+
+        if (action === "first")
+          page = 0;
+
+        if (action === "last")
+          page = images.length - 1;
+
+        if (page < 0)
+          page = images.length - 1;
+
+        if (page >= images.length)
+          page = 0;
+
+        const oldEmbed =
+          interaction.message
+            .embeds[0];
+
+        const embed =
+          EmbedBuilder.from(
+            oldEmbed
+          )
+
+            .setImage(
+              images[page]
+            )
+
+            .setFooter({
+
+              text:
+                `Set ${page + 1} of ${images.length}`,
+
+              iconURL:
+                interaction.user.displayAvatarURL()
+            });
+
+        await interaction.update({
+          embeds: [embed]
+        });
       }
 
       // =========================
@@ -362,85 +772,6 @@ module.exports = client => {
             });
           }
         }
-      }
-
-      // =========================
-      // BUTTONS
-      // =========================
-
-      if (
-        interaction.isButton()
-      ) {
-
-        const pokemonCommand =
-          client.commands.get(
-            "pokemon"
-          );
-
-        const pokemon =
-          pokemonCommand.pokemon;
-
-        const [action, name] =
-          interaction.customId.split("_");
-
-        const mon =
-          pokemon[name];
-
-        if (!mon) return;
-
-        const images =
-          mon.sets;
-
-        let page =
-          parseInt(
-            interaction.message
-              .embeds[0]
-              .footer.text
-              .split(" ")[1]
-          ) - 1;
-
-        if (action === "next")
-          page++;
-
-        if (action === "prev")
-          page--;
-
-        if (action === "first")
-          page = 0;
-
-        if (action === "last")
-          page = images.length - 1;
-
-        if (page < 0)
-          page = images.length - 1;
-
-        if (page >= images.length)
-          page = 0;
-
-        const oldEmbed =
-          interaction.message
-            .embeds[0];
-
-        const embed =
-          EmbedBuilder.from(
-            oldEmbed
-          )
-
-          .setImage(
-            images[page]
-          )
-
-          .setFooter({
-            text:
-              `Set ${page + 1} of ${images.length}`,
-
-            iconURL:
-              interaction.user.displayAvatarURL()
-          });
-
-        await interaction.update({
-          embeds: [embed]
-        });
       }
     }
   );
