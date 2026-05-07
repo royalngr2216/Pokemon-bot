@@ -1,10 +1,14 @@
 const {
   EmbedBuilder,
   ActionRowBuilder,
-  StringSelectMenuBuilder
+  StringSelectMenuBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle
 } = require("discord.js");
 
-const moment = require("moment-timezone");
+const moment =
+  require("moment-timezone");
 
 const timezones =
   require("../utils/timezones");
@@ -16,89 +20,173 @@ module.exports = client => {
     async interaction => {
 
       // =========================
-      // MODAL SUBMIT
-      // =========================
-
-      if (interaction.isModalSubmit()) {
-
-        if (
-          interaction.customId ===
-          "tz_modal"
-        ) {
-
-          const time =
-            interaction.fields.getTextInputValue(
-              "tz_time"
-            );
-
-          const date =
-            interaction.fields.getTextInputValue(
-              "tz_date"
-            );
-
-          const menu =
-            new StringSelectMenuBuilder()
-              .setCustomId(
-                `tz_select|${time}|${date}`
-              )
-              .setPlaceholder(
-                "Select timezone"
-              )
-              .addOptions(timezones);
-
-          const row =
-            new ActionRowBuilder()
-              .addComponents(menu);
-
-          return interaction.reply({
-            content:
-              "Select your timezone:",
-            components: [row],
-            ephemeral: true
-          });
-        }
-      }
-
-      // =========================
-      // TIMEZONE DROPDOWN
+      // TIMEZONE SELECT
       // =========================
 
       if (
         interaction.isStringSelectMenu()
       ) {
 
+        // =====================
+        // TZ DROPDOWN
+        // =====================
+
         if (
-          interaction.customId.startsWith(
-            "tz_select"
-          )
+          interaction.customId ===
+          "tz_timezone_select"
         ) {
-
-          const parts =
-            interaction.customId.split("|");
-
-          const time = parts[1];
-
-          const date = parts[2];
 
           const timezone =
             interaction.values[0];
 
-          // PARSE TIME
-          const parsed =
-            moment.tz(
-              `${date} ${time}`,
-              "YYYY-MM-DD h:mm A",
-              timezone
+          const modal =
+            new ModalBuilder()
+
+              .setCustomId(
+                `tz_modal|${timezone}`
+              )
+
+              .setTitle(
+                "Match Time"
+              );
+
+          // TIME INPUT
+          const timeInput =
+            new TextInputBuilder()
+
+              .setCustomId(
+                "tz_time"
+              )
+
+              .setLabel(
+                "Time (24h format)"
+              )
+
+              .setPlaceholder(
+                "21:30"
+              )
+
+              .setStyle(
+                TextInputStyle.Short
+              )
+
+              .setRequired(true);
+
+          // DAYS INPUT
+          const daysInput =
+            new TextInputBuilder()
+
+              .setCustomId(
+                "tz_days"
+              )
+
+              .setLabel(
+                "Days from now"
+              )
+
+              .setPlaceholder(
+                "0 = today, 1 = tomorrow"
+              )
+
+              .setStyle(
+                TextInputStyle.Short
+              )
+
+              .setRequired(true);
+
+          modal.addComponents(
+
+            new ActionRowBuilder()
+              .addComponents(timeInput),
+
+            new ActionRowBuilder()
+              .addComponents(daysInput)
+
+          );
+
+          return interaction.showModal(
+            modal
+          );
+        }
+      }
+
+      // =========================
+      // MODAL SUBMIT
+      // =========================
+
+      if (
+        interaction.isModalSubmit()
+      ) {
+
+        if (
+          interaction.customId.startsWith(
+            "tz_modal"
+          )
+        ) {
+
+          const timezone =
+            interaction.customId
+              .split("|")[1];
+
+          const time =
+            interaction.fields.getTextInputValue(
+              "tz_time"
             );
 
-          if (!parsed.isValid()) {
+          const days =
+            parseInt(
+              interaction.fields.getTextInputValue(
+                "tz_days"
+              )
+            );
+
+          // VALIDATE TIME
+          const timeRegex =
+            /^([01]?\d|2[0-3]):([0-5]\d)$/;
+
+          if (
+            !timeRegex.test(time)
+          ) {
 
             return interaction.reply({
+
               content:
-                "❌ Invalid date or time.",
+                "❌ Invalid time format. Use 24h format like `21:30`",
+
               ephemeral: true
             });
           }
+
+          if (
+            isNaN(days) ||
+            days < 0
+          ) {
+
+            return interaction.reply({
+
+              content:
+                "❌ Invalid days value.",
+
+              ephemeral: true
+            });
+          }
+
+          const [hours, minutes] =
+            time.split(":");
+
+          // CREATE TIME
+          const parsed =
+            moment()
+
+              .tz(timezone)
+
+              .add(days, "days")
+
+              .hour(parseInt(hours))
+
+              .minute(parseInt(minutes))
+
+              .second(0);
 
           const unix =
             Math.floor(
@@ -107,9 +195,11 @@ module.exports = client => {
 
           const embed =
             new EmbedBuilder()
+
               .setTitle(
                 "Match Time"
               )
+
               .setColor(0x5865F2)
 
               .setDescription(
@@ -140,7 +230,9 @@ module.exports = client => {
       // AUTOCOMPLETE
       // =========================
 
-      if (interaction.isAutocomplete()) {
+      if (
+        interaction.isAutocomplete()
+      ) {
 
         const command =
           client.commands.get(
@@ -206,7 +298,9 @@ module.exports = client => {
       // BUTTONS
       // =========================
 
-      if (interaction.isButton()) {
+      if (
+        interaction.isButton()
+      ) {
 
         const pokemonCommand =
           client.commands.get(
