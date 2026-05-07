@@ -284,11 +284,11 @@ module.exports = client => {
 
                 `### Relative\n` +
 
-                `<t:${unix}:R>\n\n` +
+                `<t:${unix}:R>`
 
-                `\`${time} • GMT${timezone}\``
+              )
 
-              );
+              .setTimestamp();
 
           return interaction.reply({
             embeds: [embed]
