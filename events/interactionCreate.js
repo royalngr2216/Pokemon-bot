@@ -318,6 +318,9 @@ module.exports = client => {
             guildId:
               interaction.guild.id,
 
+            channelId:
+              interaction.channel.id,
+
             player1:
               interaction.user.id,
 
@@ -381,7 +384,7 @@ module.exports = client => {
 
                 `### Players\n` +
 
-                `${interaction.user} vs ${opponent}\n\n` +
+                `${in.user} vs ${opponent}\n\n` +
 
                 `### Match Time\n` +
 
@@ -407,7 +410,7 @@ module.exports = client => {
 
               .setTimestamp();
 
-          return interaction.reply({
+          return in.reply({
 
             content:
               `${opponent}`,
@@ -424,7 +427,7 @@ module.exports = client => {
       // =========================
 
       if (
-        interaction.isButton()
+        in.isButton()
       ) {
 
         // ==================================================
@@ -432,7 +435,7 @@ module.exports = client => {
         // ==================================================
 
         if (
-          interaction.customId.startsWith(
+          in.customId.startsWith(
             "matches_"
           )
         ) {
