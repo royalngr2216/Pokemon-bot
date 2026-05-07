@@ -232,6 +232,37 @@ module.exports = client => {
               parsed.valueOf() / 1000
             );
 
+          // =====================
+          // RANDOM COLORS
+          // =====================
+
+          const colors = [
+
+            0x5865F2,
+            0x57F287,
+            0xFEE75C,
+            0xEB459E,
+            0xED4245,
+            0x3498DB,
+            0x9B59B6,
+            0x1ABC9C,
+            0xE67E22,
+            0x95A5A6
+
+          ];
+
+          const randomColor =
+            colors[
+              Math.floor(
+                Math.random() *
+                colors.length
+              )
+            ];
+
+          // =====================
+          // EMBED
+          // =====================
+
           const embed =
             new EmbedBuilder()
 
@@ -239,7 +270,9 @@ module.exports = client => {
                 "Match Time"
               )
 
-              .setColor(0x5865F2)
+              .setColor(
+                randomColor
+              )
 
               .setDescription(
 
@@ -255,9 +288,7 @@ module.exports = client => {
 
                 `\`${time} • GMT${timezone}\``
 
-              )
-
-              .setTimestamp();
+              );
 
           return interaction.reply({
             embeds: [embed]
