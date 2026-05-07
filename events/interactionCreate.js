@@ -122,22 +122,6 @@ module.exports = client => {
               "$10$2:"
             );
 
-          const tzRegex =
-            /^[+-]?\d{2}:\d{2}$/;
-
-          if (
-            !tzRegex.test(timezone)
-          ) {
-
-            return interaction.reply({
-
-              content:
-                "❌ Invalid GMT offset.",
-
-              ephemeral: true
-            });
-          }
-
           const [hours, minutes] =
             time.split(":");
 
@@ -258,10 +242,6 @@ module.exports = client => {
               "schedule_notes"
             ) || "No notes.";
 
-          // =====================
-          // NORMALIZE GMT
-          // =====================
-
           timezone =
             timezone.replace(/\s+/g, "");
 
@@ -301,10 +281,6 @@ module.exports = client => {
               "$10$2:"
             );
 
-          // =====================
-          // CREATE TIME
-          // =====================
-
           const [hours, minutes] =
             time.split(":");
 
@@ -330,18 +306,10 @@ module.exports = client => {
               parsed.valueOf() / 1000
             );
 
-          // =====================
-          // MATCH ID
-          // =====================
-
           const matchId =
             `SCH-${Math.floor(
               Math.random() * 999999
             )}`;
-
-          // =====================
-          // SAVE DATABASE
-          // =====================
 
           await Match.create({
 
@@ -363,10 +331,6 @@ module.exports = client => {
             status: "pending"
 
           });
-
-          // =====================
-          // BUTTONS
-          // =====================
 
           const buttons =
             new ActionRowBuilder()
@@ -401,10 +365,6 @@ module.exports = client => {
                     ButtonStyle.Danger
                   )
               );
-
-          // =====================
-          // EMBED
-          // =====================
 
           const embed =
             new EmbedBuilder()
@@ -468,6 +428,199 @@ module.exports = client => {
       ) {
 
         // ==================================================
+        // MATCHES PAGINATION
+        // ==================================================
+
+        if (
+          interaction.customId.startsWith(
+            "matches_"
+          )
+        ) {
+
+          const split =
+            interaction.customId.split("_");
+
+          const action =
+            split[1];
+
+          let page =
+            parseInt(split[2]);
+
+          const matches =
+            await Match.find({
+
+              guildId:
+                interaction.guild.id
+
+            });
+
+          const statusPriority = {
+
+            confirmed: 0,
+            pending: 1,
+            declined: 2
+
+          };
+
+          matches.sort((a, b) => {
+
+            const statusCompare =
+
+              statusPriority[a.status] -
+              statusPriority[b.status];
+
+            if (
+              statusCompare !== 0
+            ) {
+
+              return statusCompare;
+            }
+
+            return (
+              a.timestamp -
+              b.timestamp
+            );
+          });
+
+          const matchesPerPage = 5;
+
+          const maxPage =
+            Math.ceil(
+              matches.length /
+              matchesPerPage
+            ) - 1;
+
+          if (
+            action === "next"
+          ) {
+            page++;
+          }
+
+          if (
+            action === "prev"
+          ) {
+            page--;
+          }
+
+          if (page < 0)
+            page = 0;
+
+          if (page > maxPage)
+            page = maxPage;
+
+          const current =
+            matches.slice(
+
+              page * matchesPerPage,
+
+              (page + 1) *
+              matchesPerPage
+            );
+
+          const embed =
+            new EmbedBuilder()
+
+              .setTitle(
+                "Tournament Matches"
+              )
+
+              .setColor(
+                0x5865F2
+              );
+
+          current.forEach(match => {
+
+            let statusEmoji =
+              "🟡";
+
+            if (
+              match.status ===
+              "confirmed"
+            ) {
+              statusEmoji = "🟢";
+            }
+
+            if (
+              match.status ===
+              "declined"
+            ) {
+              statusEmoji = "🔴";
+            }
+
+            embed.addFields({
+
+              name:
+                `${statusEmoji} ${match.matchId}`,
+
+              value:
+
+                `<@${match.player1}> vs <@${match.player2}>\n\n` +
+
+                `<t:${match.timestamp}:F>\n` +
+
+                `<t:${match.timestamp}:R>`,
+
+              inline: false
+            });
+          });
+
+          embed.setFooter({
+
+            text:
+              `Page ${page + 1}/${maxPage + 1}`
+          });
+
+          const row =
+            new ActionRowBuilder()
+
+              .addComponents(
+
+                new ButtonBuilder()
+
+                  .setCustomId(
+                    `matches_prev_${page}`
+                  )
+
+                  .setLabel(
+                    "Previous"
+                  )
+
+                  .setStyle(
+                    ButtonStyle.Secondary
+                  )
+
+                  .setDisabled(
+                    page <= 0
+                  ),
+
+                new ButtonBuilder()
+
+                  .setCustomId(
+                    `matches_next_${page}`
+                  )
+
+                  .setLabel(
+                    "Next"
+                  )
+
+                  .setStyle(
+                    ButtonStyle.Secondary
+                  )
+
+                  .setDisabled(
+                    page >= maxPage
+                  )
+              );
+
+          return interaction.update({
+
+            embeds: [embed],
+
+            components: [row]
+          });
+        }
+
+        // ==================================================
         // ACCEPT
         // ==================================================
 
@@ -525,8 +678,6 @@ module.exports = client => {
               .setColor(
                 0x57F287
               )
-
-              .spliceFields(0, 0)
 
               .setDescription(
 
@@ -626,84 +777,6 @@ module.exports = client => {
             components: []
           });
         }
-
-        // ==================================================
-        // POKEMON BUTTONS
-        // ==================================================
-
-        const pokemonCommand =
-          client.commands.get(
-            "pokemon"
-          );
-
-        if (!pokemonCommand)
-          return;
-
-        const pokemon =
-          pokemonCommand.pokemon;
-
-        const [action, name] =
-          interaction.customId.split("_");
-
-        const mon =
-          pokemon[name];
-
-        if (!mon) return;
-
-        const images =
-          mon.sets;
-
-        let page =
-          parseInt(
-            interaction.message
-              .embeds[0]
-              .footer.text
-              .split(" ")[1]
-          ) - 1;
-
-        if (action === "next")
-          page++;
-
-        if (action === "prev")
-          page--;
-
-        if (action === "first")
-          page = 0;
-
-        if (action === "last")
-          page = images.length - 1;
-
-        if (page < 0)
-          page = images.length - 1;
-
-        if (page >= images.length)
-          page = 0;
-
-        const oldEmbed =
-          interaction.message
-            .embeds[0];
-
-        const embed =
-          EmbedBuilder.from(
-            oldEmbed
-          )
-
-            .setImage(
-              images[page]
-            )
-
-            .setFooter({
-
-              text:
-                `Set ${page + 1} of ${images.length}`,
-
-              iconURL:
-                interaction.user.displayAvatarURL()
-            });
-
-        await interaction.update({
-          embeds: [embed]
-        });
       }
 
       // =========================
