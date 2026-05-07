@@ -25,7 +25,12 @@ module.exports = {
       await Match.find({
 
         guildId:
-          interaction.guild.id
+          interaction.guild.id,
+
+        timestamp: {
+          $gte:
+            Math.floor(Date.now() / 1000)
+        }
 
       });
 
@@ -105,24 +110,35 @@ module.exports = {
       let statusEmoji =
         "🟡";
 
+      let statusText =
+        "Pending Match";
+
       if (
         match.status ===
         "confirmed"
       ) {
+
         statusEmoji = "🟢";
+
+        statusText =
+          "Confirmed Match";
       }
 
       if (
         match.status ===
         "declined"
       ) {
+
         statusEmoji = "🔴";
+
+        statusText =
+          "Declined Match";
       }
 
       embed.addFields({
 
         name:
-          `${statusEmoji} ${match.matchId}`,
+          `${statusEmoji} ${statusText}`,
 
         value:
 
