@@ -1,59 +1,47 @@
 const {
   SlashCommandBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  ActionRowBuilder
+  ActionRowBuilder,
+  StringSelectMenuBuilder
 } = require("discord.js");
 
+const timezones =
+  require("../utils/timezones");
+
 module.exports = {
+
   data: new SlashCommandBuilder()
     .setName("tz")
     .setDescription(
-      "Create a localized tournament time"
+      "Create a localized match time"
     ),
 
   async execute(interaction) {
 
-    const modal = new ModalBuilder()
-      .setCustomId("tz_modal")
-      .setTitle("Match Time");
+    const menu =
+      new StringSelectMenuBuilder()
 
-    // TIME INPUT
-    const timeInput =
-      new TextInputBuilder()
-        .setCustomId("tz_time")
-        .setLabel(
-          "Enter time (Example: 7:30 PM)"
+        .setCustomId(
+          "tz_timezone_select"
         )
-        .setStyle(
-          TextInputStyle.Short
-        )
-        .setRequired(true);
 
-    // DATE INPUT
-    const dateInput =
-      new TextInputBuilder()
-        .setCustomId("tz_date")
-        .setLabel(
-          "Enter date (YYYY-MM-DD)"
-        )
-        .setStyle(
-          TextInputStyle.Short
-        )
         .setPlaceholder(
-          "2026-05-08"
+          "Select your timezone"
         )
-        .setRequired(true);
 
-    modal.addComponents(
+        .addOptions(timezones);
+
+    const row =
       new ActionRowBuilder()
-        .addComponents(timeInput),
+        .addComponents(menu);
 
-      new ActionRowBuilder()
-        .addComponents(dateInput)
-    );
+    await interaction.reply({
 
-    await interaction.showModal(modal);
+      content:
+        "Select your timezone:",
+
+      components: [row],
+
+      ephemeral: true
+    });
   }
 };
