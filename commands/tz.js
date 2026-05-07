@@ -6,9 +6,6 @@ const {
 const moment =
   require("moment-timezone");
 
-const timezones =
-  require("../utils/timezones");
-
 module.exports = {
 
   data: new SlashCommandBuilder()
@@ -55,7 +52,7 @@ module.exports = {
         .setName("timezone")
 
         .setDescription(
-          "Select timezone"
+          "Search timezone"
         )
 
         .setRequired(true)
@@ -74,19 +71,15 @@ module.exports = {
         .getFocused()
         .toLowerCase();
 
+    const allTimezones =
+      moment.tz.names();
+
     const filtered =
-      timezones
+      allTimezones
 
         .filter(tz =>
 
-          tz.label
-            .toLowerCase()
-            .includes(focused)
-
-          ||
-
-          tz.value
-            .toLowerCase()
+          tz.toLowerCase()
             .includes(focused)
         )
 
@@ -96,9 +89,9 @@ module.exports = {
 
       filtered.map(tz => ({
 
-        name: tz.label,
+        name: tz,
 
-        value: tz.value
+        value: tz
 
       }))
     );
@@ -150,6 +143,19 @@ module.exports = {
 
         content:
           "❌ Days cannot be negative.",
+
+        ephemeral: true
+      });
+    }
+
+    if (
+      !moment.tz.zone(timezone)
+    ) {
+
+      return interaction.reply({
+
+        content:
+          "❌ Invalid timezone.",
 
         ephemeral: true
       });
