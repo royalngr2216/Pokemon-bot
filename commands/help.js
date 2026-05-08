@@ -22,17 +22,7 @@ module.exports = {
       new EmbedBuilder()
 
         .setTitle(
-          "OrasBot"
-        )
-
-        .setDescription(
-
-          "Competitive Pokémon\n" +
-
-          "Tournament scheduling\n" +
-
-          "Timezone utilities"
-
+          "Oras Utilities"
         )
 
         .setColor(
@@ -48,9 +38,11 @@ module.exports = {
 
             value:
 
+              "`/pokemon`\n" +
+
               "Pokémon resources and sets",
 
-            inline: true
+            inline: false
           },
 
           {
@@ -60,9 +52,15 @@ module.exports = {
 
             value:
 
-              "Timezone conversion and reminders",
+              "`/tz`\n" +
 
-            inline: true
+              "Timezone conversion\n\n" +
+
+              "`/remind`\n" +
+
+              "Tournament reminders",
+
+            inline: false
           },
 
           {
@@ -72,9 +70,15 @@ module.exports = {
 
             value:
 
-              "Scheduling and match tracking",
+              "`/schedule`\n" +
 
-            inline: true
+              "Schedule matches\n\n" +
+
+              "`/matches`\n" +
+
+              "View scheduled matches",
+
+            inline: false
           }
         );
 
