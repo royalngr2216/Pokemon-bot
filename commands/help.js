@@ -60,6 +60,15 @@ module.exports = {
 
 [2;37mCommand :[0m [2;32m/schedulecancel[0m
 [2;37mAction  :[0m [2;32mCancel scheduled matches[0m
+\`\`\`
+
+\`\`\`ansi
+[2;37m━━━━━━━━━━ ⚙ MODERATION ━━━━━━━━━━━[0m
+\`\`\`
+
+\`\`\`ansi
+[2;37mCommand :[0m [2;32m/purge[0m
+[2;37mAction  :[0m [2;32mDelete channel messages[0m
 \`\`\``
 
         );
