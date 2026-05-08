@@ -1,5 +1,4 @@
 const express = require("express");
-
 const app = express();
 
 app.get("/", (req, res) =>
@@ -18,19 +17,26 @@ const {
 
 const fs = require("fs");
 
+const mongoose =
+  require("mongoose");
+
 // =========================
 // MONGODB
 // =========================
 
-const connectMongo =
-  require("./database/mongoose");
+mongoose.connect(
+  process.env.MONGO_URI
+)
 
-// =========================
-// REMINDERS
-// =========================
+.then(() => {
+  console.log(
+    "MongoDB Connected"
+  );
+})
 
-const startReminders =
-  require("./systems/reminders");
+.catch(err => {
+  console.log(err);
+});
 
 // =========================
 // CLIENT
@@ -42,9 +48,11 @@ const client = new Client({
 
     GatewayIntentBits.Guilds,
 
-    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.GuildMessages,
 
-    GatewayIntentBits.GuildMessages
+    GatewayIntentBits.MessageContent,
+
+    GatewayIntentBits.DirectMessages
 
   ]
 });
@@ -96,6 +104,14 @@ for (const file of eventFiles) {
 }
 
 // =========================
+// LOAD SYSTEMS
+// =========================
+
+require("./systems/reminders")(
+  client
+);
+
+// =========================
 // READY
 // =========================
 
@@ -110,12 +126,14 @@ client.once(
 
     const commands = [];
 
-    client.commands.forEach(cmd => {
+    client.commands.forEach(
+      cmd => {
 
-      commands.push(
-        cmd.data.toJSON()
-      );
-    });
+        commands.push(
+          cmd.data.toJSON()
+        );
+      }
+    );
 
     await client.application
       .commands.set(commands);
@@ -125,18 +143,6 @@ client.once(
     );
   }
 );
-
-// =========================
-// CONNECT MONGODB
-// =========================
-
-connectMongo();
-
-// =========================
-// START REMINDER SYSTEM
-// =========================
-
-startReminders(client);
 
 // =========================
 // LOGIN
