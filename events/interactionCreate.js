@@ -402,13 +402,7 @@ module.exports = client => {
 
                 `🟡 Awaiting confirmation`
 
-              )
-
-              .setFooter({
-                text: matchId
-              })
-
-              .setTimestamp();
+              );
 
           return interaction.reply({
 
