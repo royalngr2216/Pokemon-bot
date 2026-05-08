@@ -190,9 +190,7 @@ module.exports = client => {
 
                 `<t:${unix}:R>`
 
-              )
-
-              .setTimestamp();
+              );
 
           return interaction.reply({
             embeds: [embed]
@@ -425,6 +423,266 @@ module.exports = client => {
       ) {
 
         // ==================================================
+        // HELP MENU
+        // ==================================================
+
+        if (
+          interaction.customId.startsWith(
+            "help_"
+          )
+        ) {
+
+          const type =
+            interaction.customId
+              .split("_")[1];
+
+          let embed =
+            new EmbedBuilder();
+
+          if (
+            type ===
+            "competitive"
+          ) {
+
+            embed
+
+              .setTitle(
+                "⚔ Competitive Commands"
+              )
+
+              .setColor(
+                0x5865F2
+              )
+
+              .setDescription(
+
+                "`/pokemon`\n" +
+
+                "View Pokémon sets and competitive information."
+
+              );
+          }
+
+          if (
+            type ===
+            "utilities"
+          ) {
+
+            embed
+
+              .setTitle(
+                "🌍 Utility Commands"
+              )
+
+              .setColor(
+                0x57F287
+              )
+
+              .setDescription(
+
+                "`/tz`\n" +
+
+                "Create localized tournament times.\n\n" +
+
+                "`/remind`\n" +
+
+                "Set tournament reminders."
+
+              );
+          }
+
+          if (
+            type ===
+            "tournament"
+          ) {
+
+            embed
+
+              .setTitle(
+                "🏆 Tournament Commands"
+              )
+
+              .setColor(
+                0xED4245
+              )
+
+              .setDescription(
+
+                "`/schedule`\n" +
+
+                "Schedule tournament matches.\n\n" +
+
+                "`/matches`\n" +
+
+                "View upcoming scheduled matches."
+
+              );
+          }
+
+          const row =
+            new ActionRowBuilder()
+
+              .addComponents(
+
+                new ButtonBuilder()
+
+                  .setCustomId(
+                    "help_home"
+                  )
+
+                  .setLabel(
+                    "Back"
+                  )
+
+                  .setStyle(
+                    ButtonStyle.Secondary
+                  )
+              );
+
+          if (
+            type === "home"
+          ) {
+
+            embed
+
+              .setTitle(
+                "🌌 OrasBot Command Center"
+              )
+
+              .setDescription(
+
+                "Competitive Pokémon tools,\n" +
+
+                "tournament scheduling,\n" +
+
+                "and utility systems.\n\n" +
+
+                "Choose a category below."
+
+              )
+
+              .setColor(
+                0x5865F2
+              )
+
+              .addFields(
+
+                {
+
+                  name:
+                    "⚔ Competitive",
+
+                  value:
+
+                    "Pokémon sets,\n" +
+
+                    "competitive resources.",
+
+                  inline: true
+                },
+
+                {
+
+                  name:
+                    "🌍 Utilities",
+
+                  value:
+
+                    "Timezone conversion\n" +
+
+                    "and reminders.",
+
+                  inline: true
+                },
+
+                {
+
+                  name:
+                    "🏆 Tournament",
+
+                  value:
+
+                    "Scheduling,\n" +
+
+                    "matches,\n" +
+
+                    "and tracking.",
+
+                  inline: true
+                }
+              );
+
+            const homeRow =
+              new ActionRowBuilder()
+
+                .addComponents(
+
+                  new ButtonBuilder()
+
+                    .setCustomId(
+                      "help_competitive"
+                    )
+
+                    .setLabel(
+                      "Competitive"
+                    )
+
+                    .setEmoji("⚔")
+
+                    .setStyle(
+                      ButtonStyle.Primary
+                    ),
+
+                  new ButtonBuilder()
+
+                    .setCustomId(
+                      "help_utilities"
+                    )
+
+                    .setLabel(
+                      "Utilities"
+                    )
+
+                    .setEmoji("🌍")
+
+                    .setStyle(
+                      ButtonStyle.Success
+                    ),
+
+                  new ButtonBuilder()
+
+                    .setCustomId(
+                      "help_tournament"
+                    )
+
+                    .setLabel(
+                      "Tournament"
+                    )
+
+                    .setEmoji("🏆")
+
+                    .setStyle(
+                      ButtonStyle.Danger
+                    )
+                );
+
+            return interaction.update({
+
+              embeds: [embed],
+
+              components: [homeRow]
+            });
+          }
+
+          return interaction.update({
+
+            embeds: [embed],
+
+            components: [row]
+          });
+        }
+
+        // ==================================================
         // MATCHES PAGINATION
         // ==================================================
 
@@ -535,24 +793,35 @@ module.exports = client => {
             let statusEmoji =
               "🟡";
 
+            let statusText =
+              "Pending Match";
+
             if (
               match.status ===
               "confirmed"
             ) {
+
               statusEmoji = "🟢";
+
+              statusText =
+                "Confirmed Match";
             }
 
             if (
               match.status ===
               "declined"
             ) {
+
               statusEmoji = "🔴";
+
+              statusText =
+                "Declined Match";
             }
 
             embed.addFields({
 
               name:
-                `${statusEmoji} ${match.matchId}`,
+                `${statusEmoji} ${statusText}`,
 
               value:
 
