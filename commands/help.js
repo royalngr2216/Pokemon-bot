@@ -1,9 +1,6 @@
 const {
   SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle
+  EmbedBuilder
 } = require("discord.js");
 
 module.exports = {
@@ -22,125 +19,44 @@ module.exports = {
       new EmbedBuilder()
 
         .setTitle(
-          "Oras Utilities"
+          "ORAS UTILITIES"
         )
 
         .setColor(
           0x5865F2
         )
 
-        .addFields(
+        .setDescription(
 
-          {
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-            name:
-              "⚔ Competitive",
+━━━━━━━━ ⚔ COMPETITIVE ━━━━━━━━
 
-            value:
+Command : /pokemon
+Action  : View Pokémon sets and resources
 
-              "`/pokemon`\n" +
+━━━━━━━━ 🌍 UTILITIES ━━━━━━━━━
 
-              "Pokémon resources and sets",
+Command : /tz
+Action  : Create localized tournament times
 
-            inline: false
-          },
+Command : /remind
+Action  : Tournament reminders
 
-          {
+━━━━━━━━ 🏆 TOURNAMENT ━━━━━━━━
 
-            name:
-              "🌍 Utilities",
+Command : /schedule
+Action  : Schedule tournament matches
 
-            value:
+Command : /matches
+Action  : View scheduled matches
 
-              "`/tz`\n" +
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
 
-              "Timezone conversion\n\n" +
-
-              "`/remind`\n" +
-
-              "Tournament reminders",
-
-            inline: false
-          },
-
-          {
-
-            name:
-              "🏆 Tournament",
-
-            value:
-
-              "`/schedule`\n" +
-
-              "Schedule matches\n\n" +
-
-              "`/matches`\n" +
-
-              "View scheduled matches",
-
-            inline: false
-          }
-        );
-
-    const row =
-      new ActionRowBuilder()
-
-        .addComponents(
-
-          new ButtonBuilder()
-
-            .setCustomId(
-              "help_competitive"
-            )
-
-            .setLabel(
-              "Competitive"
-            )
-
-            .setEmoji("⚔")
-
-            .setStyle(
-              ButtonStyle.Primary
-            ),
-
-          new ButtonBuilder()
-
-            .setCustomId(
-              "help_utilities"
-            )
-
-            .setLabel(
-              "Utilities"
-            )
-
-            .setEmoji("🌍")
-
-            .setStyle(
-              ButtonStyle.Success
-            ),
-
-          new ButtonBuilder()
-
-            .setCustomId(
-              "help_tournament"
-            )
-
-            .setLabel(
-              "Tournament"
-            )
-
-            .setEmoji("🏆")
-
-            .setStyle(
-              ButtonStyle.Danger
-            )
         );
 
     await interaction.reply({
-
-      embeds: [embed],
-
-      components: [row]
+      embeds: [embed]
     });
   }
 };
