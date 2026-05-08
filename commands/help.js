@@ -22,18 +22,16 @@ module.exports = {
       new EmbedBuilder()
 
         .setTitle(
-          "🌌 OrasBot Command Center"
+          "OrasBot"
         )
 
         .setDescription(
 
-          "Competitive Pokémon tools,\n" +
+          "Competitive Pokémon\n" +
 
-          "tournament scheduling,\n" +
+          "Tournament scheduling\n" +
 
-          "and utility systems.\n\n" +
-
-          "Choose a category below."
+          "Timezone utilities"
 
         )
 
@@ -50,9 +48,7 @@ module.exports = {
 
             value:
 
-              "Pokémon sets,\n" +
-
-              "competitive resources.",
+              "Pokémon resources and sets",
 
             inline: true
           },
@@ -64,9 +60,7 @@ module.exports = {
 
             value:
 
-              "Timezone conversion\n" +
-
-              "and reminders.",
+              "Timezone conversion and reminders",
 
             inline: true
           },
@@ -78,11 +72,7 @@ module.exports = {
 
             value:
 
-              "Scheduling,\n" +
-
-              "matches,\n" +
-
-              "and tracking.",
+              "Scheduling and match tracking",
 
             inline: true
           }
