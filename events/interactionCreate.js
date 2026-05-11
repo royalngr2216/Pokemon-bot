@@ -249,6 +249,21 @@ const days =
 const [hours, minutes] =
   time.split(":");
 
+// =========================
+// CURRENT TIME IN USER TZ
+// =========================
+
+const now =
+  moment()
+
+    .utcOffset(
+      timezone
+    );
+
+// =========================
+// BUILD MATCH TIME
+// =========================
+
 const scheduledDate =
   moment()
 
@@ -261,27 +276,25 @@ const scheduledDate =
       "days"
     )
 
-    .set({
+    .hour(
+      Number(hours)
+    )
 
-      hour:
-        Number(hours),
+    .minute(
+      Number(minutes)
+    )
 
-      minute:
-        Number(minutes),
+    .second(0)
 
-      second: 0,
-
-      millisecond: 0
-    });
+    .millisecond(0);
 
 // =========================
-// AUTO NEXT DAY FIX
+// IF TIME ALREADY PASSED
 // =========================
 
 if (
-  scheduledDate.isBefore(
-    moment()
-  )
+  Number(days) === 0 &&
+  scheduledDate.isBefore(now)
 ) {
 
   scheduledDate.add(
