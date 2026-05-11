@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
 
@@ -106,8 +107,7 @@ for (const file of eventFiles) {
 // =========================
 // LOAD SYSTEMS
 // =========================
-
-require("./systems/reminders")(
+require("./systems/tourReminders")(
   client
 );
 
