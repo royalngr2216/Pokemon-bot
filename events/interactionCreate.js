@@ -749,13 +749,25 @@ if (
     interaction.user.id !== OWNER_ID
   ) {
 
-    return interaction.reply({
+    if (
+  interaction.deferred ||
+  interaction.replied
+) {
 
-      content:
-        "❌ You cannot use this command in DMs.",
+  return interaction.editReply({
 
-      ephemeral: true
-    });
+    content:
+      "❌ You cannot use this command in DMs."
+  });
+}
+
+return interaction.reply({
+
+  content:
+    "❌ You cannot use this command in DMs.",
+
+  ephemeral: true
+});
   }
 
   const command =
