@@ -4,9 +4,17 @@ module.exports = client => {
     "messageCreate",
     async message => {
 
+      // =========================
+      // IGNORE BOTS
+      // =========================
+
       if (
         message.author.bot
       ) return;
+
+      // =========================
+      // FIND :emoji:
+      // =========================
 
       const matches =
         message.content.match(
@@ -17,6 +25,10 @@ module.exports = client => {
 
       let content =
         message.content;
+
+      // =========================
+      // REPLACE EMOJIS
+      // =========================
 
       for (const match of matches) {
 
@@ -34,6 +46,7 @@ module.exports = client => {
         if (emoji) {
 
           const formatted =
+
             emoji.animated
 
               ? `<a:${emoji.name}:${emoji.id}>`
@@ -48,10 +61,18 @@ module.exports = client => {
         }
       }
 
+      // =========================
+      // NO CHANGES
+      // =========================
+
       if (
         content ===
         message.content
       ) return;
+
+      // =========================
+      // DELETE ORIGINAL
+      // =========================
 
       try {
 
@@ -59,8 +80,31 @@ module.exports = client => {
 
       } catch {}
 
+      // =========================
+      // CUSTOM IDENTITY
+      // =========================
+
+      const identityCommand =
+        client.commands.get(
+          "identity"
+        );
+
+      const identities =
+        identityCommand?.identities || {};
+
+      const fakeName =
+        identities[
+          message.author.id
+        ] || message.author.username;
+
+      // =========================
+      // SEND MESSAGE
+      // =========================
+
       await message.channel.send({
-        content
+
+        content:
+          `**${fakeName}**\n${content}`
       });
     }
   );
