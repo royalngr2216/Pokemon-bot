@@ -1,89 +1,95 @@
 const Tour =
   require("../models/Tour");
 
-const moment =
-  require("moment-timezone");
-
 module.exports = client => {
 
   setInterval(async () => {
 
-    const tours =
-      await Tour.find({
+    try {
 
-        scheduled: true
-      });
+      const tours =
+        await Tour.find({
 
-    for (const tour of tours) {
+          scheduled: true,
 
-      if (
-        !tour.scheduleTime ||
-        !tour.timezone
-      ) continue;
+          reminded: false,
 
-      // =========================
-      // BUILD DATE
-      // =========================
+          scheduledFor: {
+
+            $ne: null
+          }
+        });
 
       const now =
-        moment.utc();
+        Date.now();
 
-      const today =
-        now.format(
-          "YYYY-MM-DD"
-        );
+      for (const tour of tours) {
 
-      const matchTime =
-        moment.tz(
+        const diff =
+          tour.scheduledFor - now;
 
-          `${today} ${tour.scheduleTime}`,
+        // =========================
+        // 15 MINUTES
+        // =========================
 
-          "YYYY-MM-DD HH:mm",
+        if (
 
-          "UTC"
-        )
+          diff <= 15 * 60 * 1000 &&
+          diff > 14 * 60 * 1000
 
-        .utcOffset(
-          tour.timezone
-        );
+        ) {
 
-      // =========================
-      // 15 MINUTES BEFORE
-      // =========================
+          try {
 
-      const diff =
-        matchTime.diff(
-          now,
-          "minutes"
-        );
+            const user =
+              await client.users.fetch(
+                tour.discordId
+              );
 
-      if (
-        diff <= 15 &&
-        diff >= 14 &&
-        !tour.reminded
-      ) {
+            await user.send(
 
-        try {
+              `⏰ Your match vs **${tour.opponent}** starts in 15 minutes!\n\n` +
 
-          const user =
-            await client.users.fetch(
-              tour.discordId
+              `🕒 <t:${Math.floor(
+                tour.scheduledFor / 1000
+              )}:F>\n\n` +
+
+              `⏳ <t:${Math.floor(
+                tour.scheduledFor / 1000
+              )}:R>`
             );
 
-          await user.send(
+            tour.reminded =
+              true;
 
-            `⏰ Your match vs **${tour.opponent}** starts in 15 minutes.\n\n` +
+            await tour.save();
 
-            `🕒 ${tour.scheduleTime} GMT${tour.timezone}`
-          );
+          } catch (err) {
 
-          tour.reminded =
-            true;
+            console.log(
+              err
+            );
+          }
+        }
 
-          await tour.save();
+        // =========================
+        // AUTO CLEANUP
+        // =========================
 
-        } catch {}
+        if (
+          diff < -6 * 60 * 60 * 1000
+        ) {
+
+          await Tour.deleteOne({
+
+            _id: tour._id
+          });
+        }
       }
+
+    } catch (err) {
+
+      console.log(err);
     }
 
   }, 60000);
