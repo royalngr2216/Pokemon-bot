@@ -84,8 +84,14 @@ module.exports = {
       const text =
         $("body").text();
 
+      const lines =
+        text
+          .split("\n")
+          .map(line => line.trim())
+          .filter(Boolean);
+
       // =========================
-      // FIND USERNAME
+      // USERNAME CHECK
       // =========================
 
       if (
@@ -102,47 +108,20 @@ module.exports = {
       }
 
       // =========================
-      // FIND OPPONENT
+      // CLEAN TITLE
       // =========================
 
-      let opponent =
-        "Unknown";
-
-      const regex1 =
-        new RegExp(
-
-          `${user.smogonName}\\s+vs\\.?\\s+([A-Za-z0-9_-]+)`,
-
-          "i"
-        );
-
-      const regex2 =
-        new RegExp(
-
-          `([A-Za-z0-9_-]+)\\s+vs\\.?\\s+${user.smogonName}`,
-
-          "i"
-        );
-
-      const match1 =
-        text.match(regex1);
-
-      const match2 =
-        text.match(regex2);
-
-      if (match1) {
-
-        opponent =
-          match1[1];
-
-      } else if (match2) {
-
-        opponent =
-          match2[1];
-      }
+      let title =
+        $("title")
+          .text()
+          .replace(
+            " | Smogon Forums",
+            ""
+          )
+          .trim();
 
       // =========================
-      // FIND DEADLINE
+      // DEADLINE
       // =========================
 
       let deadline =
@@ -164,69 +143,157 @@ module.exports = {
       }
 
       // =========================
-      // CLEAN TITLE
+      // FIND MATCHUPS
       // =========================
 
-      let title =
-        $("title")
-          .text()
-          .replace(
-            " | Smogon Forums",
-            ""
+      let currentSet =
+        "Main";
+
+      let imported = 0;
+
+      for (const line of lines) {
+
+        // =========================
+        // TRACK SETS
+        // =========================
+
+        if (
+          /^SET\s+\d+/i.test(
+            line
           )
-          .trim();
+        ) {
 
-      title =
-        title
-          .replace(
-            /Thread starterStart date/i,
-            ""
-          )
-          .trim();
+          currentSet =
+            line;
 
-      // =========================
-      // DUPLICATE CHECK
-      // =========================
+          continue;
+        }
 
-      const existing =
-        await Tour.findOne({
+        // =========================
+        // MUST CONTAIN VS
+        // =========================
+
+        if (
+          !/vs/i.test(line)
+        ) continue;
+
+        const parts =
+          line.split(/vs/i);
+
+        if (
+          parts.length !== 2
+        ) continue;
+
+        const left =
+          parts[0].trim();
+
+        const right =
+          parts[1].trim();
+
+        // =========================
+        // IGNORE TEAM VS TEAM
+        // =========================
+
+        if (
+          left === left.toUpperCase() ||
+          right === right.toUpperCase()
+        ) {
+
+          continue;
+        }
+
+        const usernameLower =
+          user.smogonName
+            .toLowerCase();
+
+        let opponent =
+          null;
+
+        if (
+          left.toLowerCase() ===
+          usernameLower
+        ) {
+
+          opponent = right;
+        }
+
+        else if (
+          right.toLowerCase() ===
+          usernameLower
+        ) {
+
+          opponent = left;
+        }
+
+        if (!opponent)
+          continue;
+
+        // =========================
+        // DUPLICATE CHECK
+        // =========================
+
+        const exists =
+          await Tour.findOne({
+
+            discordId:
+              interaction.user.id,
+
+            tournament:
+              title,
+
+            opponent,
+
+            set:
+              currentSet
+          });
+
+        if (exists)
+          continue;
+
+        // =========================
+        // SAVE MATCH
+        // =========================
+
+        await Tour.create({
 
           discordId:
             interaction.user.id,
 
-          thread: url
+          tournament:
+            title,
+
+          set:
+            currentSet,
+
+          round:
+            currentSet,
+
+          opponent,
+
+          deadline,
+
+          thread:
+            url,
+
+          scheduled:
+            false
         });
 
-      if (existing) {
+        imported++;
+      }
+
+      // =========================
+      // NOTHING FOUND
+      // =========================
+
+      if (!imported) {
 
         return interaction.editReply({
 
           content:
-            "⚠ This thread is already imported."
+            "❌ No matchups found for your username."
         });
       }
-
-      // =========================
-      // SAVE TOUR
-      // =========================
-
-      await Tour.create({
-
-        discordId:
-          interaction.user.id,
-
-        tournament:
-          title,
-
-        round:
-          title,
-
-        opponent,
-
-        deadline,
-
-        thread: url
-      });
 
       // =========================
       // EMBED
@@ -243,34 +310,15 @@ module.exports = {
             0x5865F2
           )
 
-          .addFields(
+          .setDescription(
 
-            {
+            `✅ Imported **${imported}** matches.\n\n` +
 
-              name:
-                "Tournament",
+            `🏆 **Tournament**\n` +
+            `${title}\n\n` +
 
-              value:
-                title
-            },
-
-            {
-
-              name:
-                "Opponent",
-
-              value:
-                opponent
-            },
-
-            {
-
-              name:
-                "Deadline",
-
-              value:
-                deadline
-            }
+            `⏰ **Deadline**\n` +
+            `${deadline}`
           )
 
           .setFooter({
