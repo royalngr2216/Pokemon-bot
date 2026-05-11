@@ -10,30 +10,30 @@ module.exports = {
     .setName("cf")
 
     .setDescription(
-      "Coinflip between two users"
+      "Coinflip between two players"
     )
 
-    .addUserOption(option =>
+    .addStringOption(option =>
 
       option
 
         .setName("user1")
 
         .setDescription(
-          "First user"
+          "First player"
         )
 
         .setRequired(true)
     )
 
-    .addUserOption(option =>
+    .addStringOption(option =>
 
       option
 
         .setName("user2")
 
         .setDescription(
-          "Second user"
+          "Second player"
         )
 
         .setRequired(true)
@@ -42,16 +42,19 @@ module.exports = {
   async execute(interaction) {
 
     const user1 =
-      interaction.options.getUser(
+      interaction.options.getString(
         "user1"
       );
 
     const user2 =
-      interaction.options.getUser(
+      interaction.options.getString(
         "user2"
       );
 
-    if (user1.id === user2.id) {
+    if (
+      user1.toLowerCase() ===
+      user2.toLowerCase()
+    ) {
 
       return interaction.reply({
 
@@ -71,14 +74,14 @@ module.exports = {
       new EmbedBuilder()
 
         .setTitle(
-          `${user1.username} vs ${user2.username}`
+          `${user1} vs ${user2}`
         )
 
         .setDescription(
 
-          `## 🎲 Coinflip\n\n` +
+          `# 🎲 Coinflip\n\n` +
 
-          `||🏆 ${winner.username} has won!||`
+          `||🏆 ${winner} has won!||`
         )
 
         .setColor(0xFEE75C)
