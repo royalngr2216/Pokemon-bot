@@ -225,10 +225,29 @@ const days =
     "days"
   );
 
-  const timezone =
-    interaction.fields.getTextInputValue(
-      "timezone"
-    );
+  let timezone =
+  interaction.fields.getTextInputValue(
+    "timezone"
+  ).trim();
+
+// =========================
+// FIX GMT FORMAT
+// =========================
+
+timezone =
+  timezone.replace(
+    /^([+-])(\d):/,
+    "$10$2:"
+  );
+
+if (
+  /^([+-])(\d{1,2})$/.test(
+    timezone
+  )
+) {
+
+  timezone += ":00";
+}
 
   const tour =
     await Tour.findById(
