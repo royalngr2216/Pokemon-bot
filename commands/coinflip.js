@@ -87,7 +87,7 @@ module.exports = {
         .setColor(0xFEE75C)
 
         .setImage(
-          "https://media.tenor.com/rJX0sQ1k7TIAAAAd/misaka-mikoto-misaka-mikoto-railgun.gif"
+          "https://cdn.discordapp.com/attachments/1501267318804713472/1503269916848029808/tenor.gif?ex=6a02bcb5&is=6a016b35&hm=38afd1c8770853ef4c6296c9f77e87aef70ca225e2178aac9ad457330154acdc"
         )
 
         .setFooter({
