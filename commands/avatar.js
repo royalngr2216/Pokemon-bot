@@ -32,13 +32,24 @@ module.exports = {
       interaction.options.getUser("user") ||
       interaction.user;
 
-    const member =
-      interaction.guild.members.cache.get(user.id);
+    let serverAvatar = null;
 
-    const serverAvatar =
-      member?.avatarURL({
-        size: 1024
-      });
+    // =========================
+    // CHECK GUILD SAFELY
+    // =========================
+
+    if (interaction.guild) {
+
+      const member =
+        interaction.guild.members.cache.get(
+          user.id
+        );
+
+      serverAvatar =
+        member?.avatarURL({
+          size: 1024
+        });
+    }
 
     const avatar =
       serverAvatar ||
@@ -65,7 +76,9 @@ module.exports = {
 
         .setColor(0x5865F2)
 
-        .setImage(avatar);
+        .setImage(avatar)
+
+        .setTimestamp();
 
     await interaction.reply({
       embeds: [embed]
