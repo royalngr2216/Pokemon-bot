@@ -72,13 +72,16 @@ module.exports = {
 
             `━━━━━━━━━━━━━━━━━━\n\n` +
 
-            `🏆 **Tournament**\n` +
-            `${tour.tournament}\n\n` +
+`🏆 **Tournament**\n` +
+`${tour.tournament}\n\n` +
 
-            `⚔ **Opponent**\n` +
-            `**${tour.opponent}**\n\n` +
+`📦 **Set**\n` +
+`${tour.set || "Main"}\n\n` +
 
-            (
+`⚔ **Opponent**\n` +
+`**${tour.opponent}**\n\n` +
+
+(
 
               scheduled
 
