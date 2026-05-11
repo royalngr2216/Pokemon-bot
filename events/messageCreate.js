@@ -76,14 +76,58 @@ module.exports = client => {
       // RESEND
       // =========================
 
-      await message.channel.send({
+      const identityCommand =
+  client.commands.get(
+    "identity"
+  );
 
-        content,
+const identities =
+  identityCommand?.identities || {};
 
-        allowedMentions: {
-          repliedUser: false
-        }
-      });
+const fakeName =
+  identities[
+    message.author.id
+  ] || message.author.username;
+
+// =========================
+// GET WEBHOOK
+// =========================
+
+const webhooks =
+  await message.channel.fetchWebhooks();
+
+let webhook =
+  webhooks.find(
+    wh =>
+      wh.owner.id === client.user.id
+  );
+
+if (!webhook) {
+
+  webhook =
+    await message.channel.createWebhook({
+
+      name: "OrasBot"
+    });
+}
+
+// =========================
+// SEND AS FAKE USER
+// =========================
+
+await webhook.send({
+
+  content,
+
+  username: fakeName,
+
+  avatarURL:
+    message.author.displayAvatarURL(),
+
+  allowedMentions: {
+    repliedUser: false
+  }
+});
     }
   );
 };
