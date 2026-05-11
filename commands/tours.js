@@ -1,6 +1,9 @@
 const {
   SlashCommandBuilder,
-  EmbedBuilder
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } = require("discord.js");
 
 const Tour =
@@ -17,7 +20,7 @@ module.exports = {
     .setName("tours")
 
     .setDescription(
-      "View your active Smogon tours"
+      "View your active tournaments"
     ),
 
   async execute(interaction) {
@@ -36,16 +39,29 @@ module.exports = {
       return interaction.editReply({
 
         content:
-          "❌ You have no active tours."
+          "❌ You have no active tournaments."
       });
     }
 
-    const embeds = [];
+    let currentPage = 0;
 
-    for (const [index, tour] of tours.entries()) {
+    // =========================
+    // EMBED
+    // =========================
 
-      const scheduled =
-        tour.scheduled;
+    const generateEmbed = index => {
+
+      const tour =
+        tours[index];
+
+      // SAFE SET VALUE
+      const safeSet =
+
+        typeof tour.set === "string"
+
+        ? tour.set
+
+        : "Main";
 
       const embed =
         new EmbedBuilder()
@@ -64,26 +80,30 @@ module.exports = {
           })
 
           .setTitle(
-
             `🎮 MATCH ${index + 1}`
+          )
+
+          .setThumbnail(
+            "https://cdn.discordapp.com/embed/avatars/0.png"
           )
 
           .setDescription(
 
             `━━━━━━━━━━━━━━━━━━\n\n` +
 
-`🏆 **Tournament**\n` +
-`${tour.tournament}\n\n` +
+            `🏆 **Tournament**\n` +
+            `${tour.tournament || "Unknown Tournament"}\n\n` +
 
-`📦 **Set**\n` +
-`${tour.set || "Main"}\n\n` +
+            `📦 **Set**\n` +
+            `${safeSet}\n\n` +
 
-`⚔ **Opponent**\n` +
-`**${tour.opponent}**\n\n` +
+            `⚔ **Opponent**\n` +
+            `**${tour.opponent || "Unknown"}**\n\n` +
 
-(
+            (
 
-              scheduled
+              tour.scheduled &&
+              tour.scheduledFor
 
               ?
 
@@ -100,18 +120,13 @@ module.exports = {
               :
 
               `❌ **Status**\n` +
-
               `Unscheduled\n\n`
             ) +
 
             `⏰ **Deadline**\n` +
-            `${tour.deadline}\n\n` +
+            `${tour.deadline || "No deadline"}\n\n` +
 
             `━━━━━━━━━━━━━━━━━━`
-          )
-
-          .setThumbnail(
-            interaction.user.displayAvatarURL()
           )
 
           .setFooter({
@@ -122,11 +137,180 @@ module.exports = {
 
           .setTimestamp();
 
-      embeds.push(embed);
-    }
+      return embed;
+    };
 
-    await interaction.editReply({
-      embeds
-    });
+    // =========================
+    // BUTTONS
+    // =========================
+
+    const row =
+      new ActionRowBuilder()
+
+        .addComponents(
+
+          new ButtonBuilder()
+
+            .setCustomId(
+              "previous"
+            )
+
+            .setEmoji(
+              "⬅️"
+            )
+
+            .setStyle(
+              ButtonStyle.Primary
+            ),
+
+          new ButtonBuilder()
+
+            .setCustomId(
+              "next"
+            )
+
+            .setEmoji(
+              "➡️"
+            )
+
+            .setStyle(
+              ButtonStyle.Primary
+            )
+        );
+
+    const message =
+      await interaction.editReply({
+
+        embeds: [
+          generateEmbed(currentPage)
+        ],
+
+        components: [row]
+      });
+
+    // =========================
+    // COLLECTOR
+    // =========================
+
+    const collector =
+      message.createMessageComponentCollector({
+
+        time:
+          1000 * 60 * 10
+      });
+
+    collector.on(
+      "collect",
+
+      async i => {
+
+        if (
+          i.user.id !==
+          interaction.user.id
+        ) {
+
+          return i.reply({
+
+            content:
+              "❌ This menu is not for you.",
+
+            ephemeral: true
+          });
+        }
+
+        if (
+          i.customId ===
+          "previous"
+        ) {
+
+          currentPage--;
+
+          if (
+            currentPage < 0
+          ) {
+
+            currentPage =
+              tours.length - 1;
+          }
+        }
+
+        else if (
+          i.customId ===
+          "next"
+        ) {
+
+          currentPage++;
+
+          if (
+            currentPage >=
+            tours.length
+          ) {
+
+            currentPage = 0;
+          }
+        }
+
+        await i.update({
+
+          embeds: [
+            generateEmbed(currentPage)
+          ],
+
+          components: [row]
+        });
+      }
+    );
+
+    collector.on(
+      "end",
+
+      async () => {
+
+        const disabledRow =
+          new ActionRowBuilder()
+
+            .addComponents(
+
+              new ButtonBuilder()
+
+                .setCustomId(
+                  "previous"
+                )
+
+                .setEmoji(
+                  "⬅️"
+                )
+
+                .setStyle(
+                  ButtonStyle.Primary
+                )
+
+                .setDisabled(true),
+
+              new ButtonBuilder()
+
+                .setCustomId(
+                  "next"
+                )
+
+                .setEmoji(
+                  "➡️"
+                )
+
+                .setStyle(
+                  ButtonStyle.Primary
+                )
+
+                .setDisabled(true)
+            );
+
+        await interaction.editReply({
+
+          components: [
+            disabledRow
+          ]
+        });
+      }
+    );
   }
 };
