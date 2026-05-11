@@ -1203,11 +1203,13 @@ if (
 
   } catch (err) {
 
-    console.error(err);
+  console.error(err);
+
+  try {
 
     if (
-      interaction.replied ||
-      interaction.deferred
+      interaction.deferred ||
+      interaction.replied
     ) {
 
       await interaction.editReply({
@@ -1223,7 +1225,9 @@ if (
           ephemeral: true
       });
     }
-  }
+
+  } catch {}
+}
 }
     }
   );
