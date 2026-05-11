@@ -8,6 +8,8 @@ const tourSchema =
 
     tournament: String,
 
+    set: String,
+
     round: String,
 
     opponent: String,
