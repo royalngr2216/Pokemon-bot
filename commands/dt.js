@@ -36,6 +36,12 @@ module.exports = {
 
   async execute(interaction) {
 
+    // =========================
+    // DEFER REPLY
+    // =========================
+
+    await interaction.deferReply();
+
     const query =
       interaction.options
         .getString("query");
@@ -96,7 +102,7 @@ module.exports = {
 
           .setTimestamp();
 
-      return interaction.reply({
+      return interaction.editReply({
         embeds: [embed]
       });
     }
@@ -151,7 +157,7 @@ module.exports = {
 
           .setTimestamp();
 
-      return interaction.reply({
+      return interaction.editReply({
         embeds: [embed]
       });
     }
@@ -198,7 +204,7 @@ module.exports = {
 
           .setTimestamp();
 
-      return interaction.reply({
+      return interaction.editReply({
         embeds: [embed]
       });
     }
@@ -241,17 +247,15 @@ module.exports = {
 
           .setTimestamp();
 
-      return interaction.reply({
+      return interaction.editReply({
         embeds: [embed]
       });
     }
 
-    return interaction.reply({
+    return interaction.editReply({
 
       content:
-        "❌ No data found.",
-
-      ephemeral: true
+        "❌ No data found."
     });
   }
 };
