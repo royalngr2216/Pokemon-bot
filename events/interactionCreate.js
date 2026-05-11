@@ -246,31 +246,49 @@ const days =
     });
   }
 
+const [hours, minutes] =
+  time.split(":");
+
 const scheduledDate =
   moment()
+
+    .utcOffset(
+      timezone
+    )
 
     .add(
       Number(days),
       "days"
     )
 
-    .utcOffset(
-      timezone
-    );
+    .set({
 
-const [hours, minutes] =
-  time.split(":");
+      hour:
+        Number(hours),
 
-scheduledDate.set({
+      minute:
+        Number(minutes),
 
-  hour:
-    Number(hours),
+      second: 0,
 
-  minute:
-    Number(minutes),
+      millisecond: 0
+    });
 
-  second: 0
-});
+// =========================
+// AUTO NEXT DAY FIX
+// =========================
+
+if (
+  scheduledDate.isBefore(
+    moment()
+  )
+) {
+
+  scheduledDate.add(
+    1,
+    "day"
+  );
+}
 
 tour.scheduledFor =
   scheduledDate.valueOf();
