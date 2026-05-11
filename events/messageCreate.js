@@ -45,18 +45,10 @@ module.exports = client => {
 
         if (emoji) {
 
-          const formatted =
-
-            emoji.animated
-
-              ? `<a:${emoji.name}:${emoji.id}>`
-
-              : `<:${emoji.name}:${emoji.id}>`;
-
           content =
             content.replace(
               match,
-              formatted
+              `<:${emoji.name}:${emoji.id}>`
             );
         }
       }
@@ -81,30 +73,16 @@ module.exports = client => {
       } catch {}
 
       // =========================
-      // CUSTOM IDENTITY
-      // =========================
-
-      const identityCommand =
-        client.commands.get(
-          "identity"
-        );
-
-      const identities =
-        identityCommand?.identities || {};
-
-      const fakeName =
-        identities[
-          message.author.id
-        ] || message.author.username;
-
-      // =========================
-      // SEND MESSAGE
+      // RESEND
       // =========================
 
       await message.channel.send({
 
-        content:
-          `**${fakeName}**\n${content}`
+        content,
+
+        allowedMentions: {
+          repliedUser: false
+        }
       });
     }
   );
