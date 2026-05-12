@@ -103,7 +103,7 @@ module.exports = {
           .setAuthor({
 
             name:
-              `${targetUser.username}'s Tournament Tracker`,
+              `${targetUser.username}'s Tournament`,
 
             iconURL:
               targetUser.displayAvatarURL()
