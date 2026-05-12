@@ -103,7 +103,7 @@ module.exports = {
           .setAuthor({
 
             name:
-              `${targetUser.username}'s Tournaments`,
+              `${targetUser.username}'s Tournament Tracker`,
 
             iconURL:
               targetUser.displayAvatarURL()
@@ -226,7 +226,7 @@ module.exports = {
       message.createMessageComponentCollector({
 
         time:
-          1000 * 60 * 10
+          1000 * 60 * 60 * 24
       });
 
     collector.on(
@@ -273,58 +273,6 @@ module.exports = {
           ],
 
           components: [row]
-        });
-      }
-    );
-
-    collector.on(
-      "end",
-
-      async () => {
-
-        const disabledRow =
-          new ActionRowBuilder()
-
-            .addComponents(
-
-              new ButtonBuilder()
-
-                .setCustomId(
-                  "previous"
-                )
-
-                .setEmoji(
-                  "⬅️"
-                )
-
-                .setStyle(
-                  ButtonStyle.Primary
-                )
-
-                .setDisabled(true),
-
-              new ButtonBuilder()
-
-                .setCustomId(
-                  "next"
-                )
-
-                .setEmoji(
-                  "➡️"
-                )
-
-                .setStyle(
-                  ButtonStyle.Primary
-                )
-
-                .setDisabled(true)
-            );
-
-        await interaction.editReply({
-
-          components: [
-            disabledRow
-          ]
         });
       }
     );
