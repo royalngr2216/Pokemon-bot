@@ -103,14 +103,14 @@ module.exports = {
           .setAuthor({
 
             name:
-              `${targetUser.username}'s Tournament Tracker`,
+              `${targetUser.username}'s Tournaments`,
 
             iconURL:
               targetUser.displayAvatarURL()
           })
 
           .setTitle(
-            `🎮 MATCH ${index + 1}`
+            `MATCH ${index + 1}`
           )
 
           .setThumbnail(
