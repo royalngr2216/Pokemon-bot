@@ -20,18 +20,49 @@ module.exports = {
     .setName("tours")
 
     .setDescription(
-      "View your active tournaments"
+      "View tournament matches"
+    )
+
+    .addUserOption(option =>
+
+      option
+
+        .setName("user")
+
+        .setDescription(
+          "User to view matches for"
+        )
+
+        .setRequired(false)
     ),
 
   async execute(interaction) {
 
     await interaction.deferReply();
 
+    // =========================
+    // TARGET USER
+    // =========================
+
+    const targetUser =
+
+      interaction.options.getUser(
+        "user"
+      )
+
+      ||
+
+      interaction.user;
+
+    // =========================
+    // GET TOURS
+    // =========================
+
     const tours =
       await Tour.find({
 
         discordId:
-          interaction.user.id
+          targetUser.id
       });
 
     if (!tours.length) {
@@ -39,7 +70,7 @@ module.exports = {
       return interaction.editReply({
 
         content:
-          "❌ You have no active tournaments."
+          `❌ ${targetUser.username} has no active tournaments.`
       });
     }
 
@@ -54,7 +85,6 @@ module.exports = {
       const tour =
         tours[index];
 
-      // SAFE SET VALUE
       const safeSet =
 
         typeof tour.set === "string"
@@ -73,10 +103,10 @@ module.exports = {
           .setAuthor({
 
             name:
-              `${interaction.user.username}'s Tournament Tracker`,
+              `${targetUser.username}'s Tournament Tracker`,
 
             iconURL:
-              interaction.user.displayAvatarURL()
+              targetUser.displayAvatarURL()
           })
 
           .setTitle(
@@ -203,20 +233,6 @@ module.exports = {
       "collect",
 
       async i => {
-
-        if (
-          i.user.id !==
-          interaction.user.id
-        ) {
-
-          return i.reply({
-
-            content:
-              "❌ This menu is not for you.",
-
-            ephemeral: true
-          });
-        }
 
         if (
           i.customId ===
