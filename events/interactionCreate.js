@@ -226,19 +226,18 @@ const days =
   );
 
   let timezone =
-  interaction.fields.getTextInputValue(
-    "timezone"
-  ).trim();
+  interaction.fields
+    .getTextInputValue(
+      "timezone"
+    )
+    .trim();
 
 // =========================
-// FIX GMT FORMAT
+// NORMALIZE GMT
 // =========================
 
-timezone =
-  timezone.replace(
-    /^([+-])(\d):/,
-    "$10$2:"
-  );
+// +7 -> +07:00
+// -4 -> -04:00
 
 if (
   /^([+-])(\d{1,2})$/.test(
@@ -246,7 +245,35 @@ if (
   )
 ) {
 
-  timezone += ":00";
+  timezone =
+    timezone.replace(
+
+      /^([+-])(\d{1,2})$/,
+
+      (_, sign, hour) =>
+
+        `${sign}${hour.padStart(2, "0")}:00`
+    );
+}
+
+// +7:00 -> +07:00
+// -4:30 -> -04:30
+
+else if (
+  /^([+-])(\d{1,2}):(\d{2})$/.test(
+    timezone
+  )
+) {
+
+  timezone =
+    timezone.replace(
+
+      /^([+-])(\d{1,2}):(\d{2})$/,
+
+      (_, sign, hour, minute) =>
+
+        `${sign}${hour.padStart(2, "0")}:${minute}`
+    );
 }
 
   const tour =
@@ -268,21 +295,6 @@ if (
 const [hours, minutes] =
   time.split(":");
 
-// =========================
-// CURRENT TIME IN USER TZ
-// =========================
-
-const now =
-  moment()
-
-    .utcOffset(
-      timezone
-    );
-
-// =========================
-// BUILD MATCH TIME
-// =========================
-
 const scheduledDate =
   moment()
 
@@ -295,32 +307,18 @@ const scheduledDate =
       "days"
     )
 
-    .hour(
-      Number(hours)
-    )
+    .set({
 
-    .minute(
-      Number(minutes)
-    )
+      hour:
+        Number(hours),
 
-    .second(0)
+      minute:
+        Number(minutes),
 
-    .millisecond(0);
+      second: 0,
 
-// =========================
-// IF TIME ALREADY PASSED
-// =========================
-
-if (
-  Number(days) === 0 &&
-  scheduledDate.isBefore(now)
-) {
-
-  scheduledDate.add(
-    1,
-    "day"
-  );
-}
+      millisecond: 0
+    });
 
 tour.scheduledFor =
   scheduledDate.valueOf();
@@ -749,25 +747,13 @@ if (
     interaction.user.id !== OWNER_ID
   ) {
 
-    if (
-  interaction.deferred ||
-  interaction.replied
-) {
+    return interaction.reply({
 
-  return interaction.editReply({
+      content:
+        "❌ You cannot use this command in DMs.",
 
-    content:
-      "❌ You cannot use this command in DMs."
-  });
-}
-
-return interaction.reply({
-
-  content:
-    "❌ You cannot use this command in DMs.",
-
-  ephemeral: true
-});
+      ephemeral: true
+    });
   }
 
   const command =
