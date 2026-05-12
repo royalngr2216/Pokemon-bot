@@ -90,24 +90,20 @@ module.exports = {
 
           .text()
 
-          // weird unicode spaces
           .replace(/\u202F/g, " ")
 
           .replace(/\u00A0/g, " ")
 
-          // normalize line endings
           .replace(/\r/g, "\n")
 
-          // collapse spaces
           .replace(/[ \t]+/g, " ")
 
-          // collapse many newlines
           .replace(/\n+/g, "\n")
 
           .trim();
 
       // =========================
-      // FIND MATCHUP LINE
+      // SPLIT LINES
       // =========================
 
       const lines =
@@ -120,12 +116,17 @@ module.exports = {
       let foundLine =
         null;
 
+      // =========================
+      // FIND MATCHUP LINE
+      // =========================
+
       for (const rawLine of lines) {
 
         const line =
           rawLine.trim();
 
-        // must contain username
+        if (!line) continue;
+
         if (
           !line
             .toLowerCase()
@@ -134,7 +135,6 @@ module.exports = {
             )
         ) continue;
 
-        // must contain vs
         if (
           !line
             .toLowerCase()
@@ -157,11 +157,8 @@ module.exports = {
       }
 
       // =========================
-      // PARSE OPPONENT
+      // CLEAN MATCHUP LINE
       // =========================
-
-      let opponent =
-        "Unknown";
 
       const cleanedLine =
         foundLine
@@ -170,31 +167,56 @@ module.exports = {
 
           .trim();
 
+      // =========================
+      // SPLIT PLAYERS
+      // =========================
+
       const parts =
         cleanedLine.split(
           /\s+vs\s+/i
         );
 
+      let opponent =
+        "Unknown";
+
       if (
         parts.length >= 2
       ) {
 
-        const left =
+        let left =
           parts[0].trim();
 
-        const right =
+        let right =
           parts[1].trim();
 
+        // remove format prefixes
+        left =
+          left.replace(
+            /^[A-Z0-9 !-]+:\s*/i,
+            ""
+          );
+
+        right =
+          right.replace(
+            /^[A-Z0-9 !-]+:\s*/i,
+            ""
+          );
+
         if (
-          left.toLowerCase() ===
-          username.toLowerCase()
+          left
+            .toLowerCase()
+            .includes(
+              username.toLowerCase()
+            )
         ) {
 
-          opponent = right;
+          opponent =
+            right;
 
         } else {
 
-          opponent = left;
+          opponent =
+            left;
         }
       }
 
