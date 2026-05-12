@@ -194,13 +194,29 @@ module.exports = {
           left.replace(
             /^[A-Z0-9 !-]+:\s*/i,
             ""
-          );
+          )
+
+          // remove bullets/dots/symbols
+          .replace(
+            /^[^\w]+/,
+            ""
+          )
+
+          .trim();
 
         right =
           right.replace(
             /^[A-Z0-9 !-]+:\s*/i,
             ""
-          );
+          )
+
+          // remove bullets/dots/symbols
+          .replace(
+            /^[^\w]+/,
+            ""
+          )
+
+          .trim();
 
         if (
           left
