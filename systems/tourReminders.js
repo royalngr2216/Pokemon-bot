@@ -16,8 +16,6 @@ module.exports = client => {
 
           scheduled: true,
 
-          reminded: false,
-
           scheduledFor: {
 
             $ne: null
