@@ -81,47 +81,172 @@ module.exports = {
       const $ =
         cheerio.load(html);
 
+      // =========================
+      // CLEAN TEXT
+      // =========================
+
       const text =
-        $("body").text();
+        $("body")
+
+          .text()
+
+          // weird unicode spaces
+          .replace(/\u202F/g, " ")
+
+          .replace(/\u00A0/g, " ")
+
+          // normalize line endings
+          .replace(/\r/g, "\n")
+
+          // collapse spaces
+          .replace(/[ \t]+/g, " ")
+
+          // collapse many newlines
+          .replace(/\n+/g, "\n")
+
+          .trim();
+
+      // =========================
+      // FIND MATCHUP LINE
+      // =========================
 
       const lines =
-        text
-          .split("\n")
-          .map(line => line.trim())
-          .filter(Boolean);
+        text.split("\n");
 
-      // =========================
-      // USERNAME CHECK
-      // =========================
+      const username =
+        user.smogonName
+          .trim();
 
-      if (
-        !text.toLowerCase().includes(
-          user.smogonName.toLowerCase()
-        )
-      ) {
+      let foundLine =
+        null;
+
+      for (const rawLine of lines) {
+
+        const line =
+          rawLine.trim();
+
+        // must contain username
+        if (
+          !line
+            .toLowerCase()
+            .includes(
+              username.toLowerCase()
+            )
+        ) continue;
+
+        // must contain vs
+        if (
+          !line
+            .toLowerCase()
+            .includes("vs")
+        ) continue;
+
+        foundLine =
+          line;
+
+        break;
+      }
+
+      if (!foundLine) {
 
         return interaction.editReply({
 
           content:
-            "❌ Your Smogon username was not found in this thread."
+            "❌ No matchups found for your username."
         });
       }
 
       // =========================
-      // CLEAN TITLE
+      // PARSE OPPONENT
       // =========================
 
-      let title =
-        $("title")
-          .text()
-          .replace(
-            " | Smogon Forums",
-            ""
-          )
+      let opponent =
+        "Unknown";
+
+      const cleanedLine =
+        foundLine
+
+          .replace(/\s+vs\.?\s+/i, " vs ")
+
           .trim();
 
+      const parts =
+        cleanedLine.split(
+          /\s+vs\s+/i
+        );
+
+      if (
+        parts.length >= 2
+      ) {
+
+        const left =
+          parts[0].trim();
+
+        const right =
+          parts[1].trim();
+
+        if (
+          left.toLowerCase() ===
+          username.toLowerCase()
+        ) {
+
+          opponent = right;
+
+        } else {
+
+          opponent = left;
+        }
+      }
+
       // =========================
-      // DEADLINE
+      // FIND SET
+      // =========================
+
+      let setName =
+        "Main";
+
+      for (
+        let i = 0;
+        i < lines.length;
+        i++
+      ) {
+
+        const line =
+          lines[i];
+
+        if (
+          line === foundLine
+        ) {
+
+          for (
+            let j = i;
+            j >= 0;
+            j--
+          ) {
+
+            const upper =
+              lines[j]
+                .trim()
+                .toUpperCase();
+
+            if (
+              upper.startsWith(
+                "SET "
+              )
+            ) {
+
+              setName =
+                lines[j]
+                  .trim();
+
+              break;
+            }
+          }
+        }
+      }
+
+      // =========================
+      // FIND DEADLINE
       // =========================
 
       let deadline =
@@ -132,168 +257,86 @@ module.exports = {
         /deadline[^a-zA-Z0-9]*([^\n]+)/i;
 
       const deadlineMatch =
-        text.match(deadlineRegex);
+        text.match(
+          deadlineRegex
+        );
 
       if (deadlineMatch) {
 
         deadline =
           deadlineMatch[1]
             .trim()
-            .slice(0, 100);
+            .slice(0, 150);
       }
 
       // =========================
-      // FIND MATCHUPS
+      // CLEAN TITLE
       // =========================
 
-      let currentSet =
-        "Main";
+      let title =
+        $("title")
 
-      let imported = 0;
+          .text()
 
-      for (const line of lines) {
-
-        // =========================
-        // TRACK SETS
-        // =========================
-
-        if (
-          /^SET\s+\d+/i.test(
-            line
+          .replace(
+            " | Smogon Forums",
+            ""
           )
-        ) {
 
-          currentSet =
-            line;
+          .replace(
+            /Thread starterStart date/i,
+            ""
+          )
 
-          continue;
-        }
+          .trim();
 
-        // =========================
-        // MUST CONTAIN VS
-        // =========================
+      // =========================
+      // DUPLICATE CHECK
+      // =========================
 
-        if (
-          !/vs/i.test(line)
-        ) continue;
-
-        const parts =
-          line.split(/vs/i);
-
-        if (
-          parts.length !== 2
-        ) continue;
-
-        const left =
-          parts[0].trim();
-
-        const right =
-          parts[1].trim();
-
-        // =========================
-        // IGNORE TEAM VS TEAM
-        // =========================
-
-        if (
-          left === left.toUpperCase() ||
-          right === right.toUpperCase()
-        ) {
-
-          continue;
-        }
-
-        const usernameLower =
-          user.smogonName
-            .toLowerCase();
-
-        let opponent =
-          null;
-
-        if (
-          left.toLowerCase() ===
-          usernameLower
-        ) {
-
-          opponent = right;
-        }
-
-        else if (
-          right.toLowerCase() ===
-          usernameLower
-        ) {
-
-          opponent = left;
-        }
-
-        if (!opponent)
-          continue;
-
-        // =========================
-        // DUPLICATE CHECK
-        // =========================
-
-        const exists =
-          await Tour.findOne({
-
-            discordId:
-              interaction.user.id,
-
-            tournament:
-              title,
-
-            opponent,
-
-            set:
-              currentSet
-          });
-
-        if (exists)
-          continue;
-
-        // =========================
-        // SAVE MATCH
-        // =========================
-
-        await Tour.create({
+      const existing =
+        await Tour.findOne({
 
           discordId:
             interaction.user.id,
 
-          tournament:
-            title,
+          thread: url,
 
-          set:
-            currentSet,
-
-          round:
-            currentSet,
-
-          opponent,
-
-          deadline,
-
-          thread:
-            url,
-
-          scheduled:
-            false
+          opponent
         });
 
-        imported++;
-      }
-
-      // =========================
-      // NOTHING FOUND
-      // =========================
-
-      if (!imported) {
+      if (existing) {
 
         return interaction.editReply({
 
           content:
-            "❌ No matchups found for your username."
+            "⚠ This matchup is already imported."
         });
       }
+
+      // =========================
+      // SAVE TOUR
+      // =========================
+
+      await Tour.create({
+
+        discordId:
+          interaction.user.id,
+
+        tournament:
+          title,
+
+        round:
+          title,
+
+        opponent,
+
+        deadline,
+
+        set: setName,
+
+        thread: url
+      });
 
       // =========================
       // EMBED
@@ -303,33 +346,62 @@ module.exports = {
         new EmbedBuilder()
 
           .setTitle(
-            "🏆 Tour Imported"
+            "🏆 Match Imported"
           )
 
           .setColor(
             0x5865F2
           )
 
-          .setDescription(
+          .addFields(
 
-            `✅ Imported **${imported}** matches.\n\n` +
+            {
 
-            `🏆 **Tournament**\n` +
-            `${title}\n\n` +
+              name:
+                "Tournament",
 
-            `⏰ **Deadline**\n` +
-            `${deadline}`
+              value:
+                title
+            },
+
+            {
+
+              name:
+                "Set",
+
+              value:
+                setName
+            },
+
+            {
+
+              name:
+                "Opponent",
+
+              value:
+                opponent
+            },
+
+            {
+
+              name:
+                "Deadline",
+
+              value:
+                deadline
+            }
           )
 
           .setFooter({
 
             text:
-              "Use /tours to view all active tours"
+              "Use /tours to view active matches"
           })
 
           .setTimestamp();
 
       await interaction.editReply({
+
         embeds: [embed]
       });
 
